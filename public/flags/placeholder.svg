@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" role="img" aria-labelledby="title desc">
+  <title id="title">Flag placeholder</title>
+  <desc id="desc">Neutral fallback flag for teams without a mapped asset.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1f2937" />
+    </linearGradient>
+    <linearGradient id="stripe" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#64748b" />
+    </linearGradient>
+  </defs>
+  <rect width="120" height="90" rx="10" fill="url(#bg)" />
+  <rect x="0" y="14" width="120" height="12" fill="url(#stripe)" opacity="0.8" />
+  <rect x="0" y="39" width="120" height="12" fill="url(#stripe)" opacity="0.6" />
+  <rect x="0" y="64" width="120" height="12" fill="url(#stripe)" opacity="0.8" />
+  <circle cx="60" cy="45" r="16" fill="#f8fafc" opacity="0.14" />
+  <path
+    d="M60 31l4.3 8.8 9.7 1.4-7 6.8 1.7 9.6L60 53l-8.7 4.6 1.7-9.6-7-6.8 9.7-1.4z"
+    fill="#f8fafc"
+    opacity="0.88"
+  />
+</svg>
