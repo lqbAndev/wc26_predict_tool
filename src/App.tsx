@@ -226,7 +226,7 @@ function App() {
                 </div>
 
                 <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/65">
-                  Hòa sau 90 phút sẽ đá penalty
+                  Hòa sau 120 phút sẽ đá penalty
                 </div>
               </div>
 
@@ -234,6 +234,7 @@ function App() {
                 coreState.knockoutVisible ? (
                   <KnockoutBracket
                     knockoutMatches={coreState.knockoutMatches}
+                    teamOrigins={derivedState.knockoutTeamOrigins}
                     championName={derivedState.championName}
                     onPredict={predictKnockoutMatch}
                     onResolvePenalty={resolvePenalty}

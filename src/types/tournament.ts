@@ -60,6 +60,13 @@ export interface PenaltyShootout {
   away: number;
 }
 
+export interface KnockoutTeamOrigin {
+  group: GroupId;
+  rank: 1 | 2 | 3;
+  source: 'group-winner' | 'group-runner-up' | 'best-third';
+  label: string;
+}
+
 export interface KnockoutMatch {
   id: string;
   stage: 'knockout';
@@ -69,6 +76,10 @@ export interface KnockoutMatch {
   awayTeamId: string | null;
   homeSeedLabel: string | null;
   awaySeedLabel: string | null;
+  regulationHomeScore: number | null;
+  regulationAwayScore: number | null;
+  extraTimeHomeScore: number | null;
+  extraTimeAwayScore: number | null;
   homeScore: number | null;
   awayScore: number | null;
   scorers: MatchScorers | null;
@@ -128,6 +139,7 @@ export interface TournamentDerivedState {
   groupStageComplete: boolean;
   knockoutReady: boolean;
   knockoutSeeds: KnockoutSeeds;
+  knockoutTeamOrigins: Record<string, KnockoutTeamOrigin>;
   championTeamId: string | null;
   championName: string | null;
 }

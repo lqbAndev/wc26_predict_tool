@@ -92,7 +92,13 @@ const playerWeight = (player: PlayerProfile) => {
   }
 };
 
-const GOAL_MINUTE_BUCKETS = [
+type GoalMinuteBucket = {
+  start: number;
+  end: number;
+  weight: number;
+};
+
+const GOAL_MINUTE_BUCKETS_REGULATION: GoalMinuteBucket[] = [
   { start: 4, end: 15, weight: 10 },
   { start: 16, end: 30, weight: 16 },
   { start: 31, end: 45, weight: 15 },
@@ -101,7 +107,13 @@ const GOAL_MINUTE_BUCKETS = [
   { start: 76, end: 90, weight: 20 },
 ] as const;
 
-const generateMatchGoalMinutes = (goalCount: number) => {
+const GOAL_MINUTE_BUCKETS_EXTRA_TIME: GoalMinuteBucket[] = [
+  { start: 91, end: 100, weight: 14 },
+  { start: 101, end: 110, weight: 12 },
+  { start: 111, end: 120, weight: 10 },
+] as const;
+
+const generateMatchGoalMinutes = (goalCount: number, buckets: GoalMinuteBucket[]) => {
   if (goalCount === 0) {
     return [];
   }
@@ -110,7 +122,7 @@ const generateMatchGoalMinutes = (goalCount: number) => {
 
   while (uniqueMinutes.size < goalCount) {
     const bucket = weightedPick(
-      GOAL_MINUTE_BUCKETS.map((entry) => ({
+      buckets.map((entry) => ({
         value: entry,
         weight: entry.weight,
       })),
@@ -122,8 +134,12 @@ const generateMatchGoalMinutes = (goalCount: number) => {
   return Array.from(uniqueMinutes).sort((left, right) => left - right);
 };
 
-const allocateGoalMinutes = (homeGoals: number, awayGoals: number) => {
-  const timeline = generateMatchGoalMinutes(homeGoals + awayGoals);
+const allocateGoalMinutes = (
+  homeGoals: number,
+  awayGoals: number,
+  minuteBuckets: GoalMinuteBucket[],
+) => {
+  const timeline = generateMatchGoalMinutes(homeGoals + awayGoals, minuteBuckets);
   const sides = shuffleArray([
     ...Array.from({ length: homeGoals }, () => 'home' as const),
     ...Array.from({ length: awayGoals }, () => 'away' as const),
@@ -175,7 +191,71 @@ const createScorers = (
   homeGoals: number,
   awayGoals: number,
 ) => {
-  const { homeMinutes, awayMinutes } = allocateGoalMinutes(homeGoals, awayGoals);
+  const { homeMinutes, awayMinutes } = allocateGoalMinutes(
+    homeGoals,
+    awayGoals,
+    GOAL_MINUTE_BUCKETS_REGULATION,
+  );
+
+  return {
+    home: generateScorersForTeam(homeTeam, homeMinutes),
+    away: generateScorersForTeam(awayTeam, awayMinutes),
+  };
+};
+
+const sampleExtraTimeBaseGoals = () =>
+  weightedPick<number>([
+    { value: 0, weight: 66 },
+    { value: 1, weight: 27 },
+    { value: 2, weight: 7 },
+  ]);
+
+const applyExtraTimeBias = (goals: number, ratingDifference: number) => {
+  let adjusted = goals;
+  const magnitude = Math.abs(ratingDifference);
+
+  if (ratingDifference >= 10 && Math.random() < Math.min(0.32, magnitude / 52)) {
+    adjusted += 1;
+  }
+
+  if (ratingDifference <= -10 && adjusted > 0 && Math.random() < Math.min(0.28, magnitude / 58)) {
+    adjusted -= 1;
+  }
+
+  return clamp(adjusted, 0, 2);
+};
+
+const generateExtraTimeScoreline = (homeTeam: Team, awayTeam: Team) => ({
+  homeGoals: applyExtraTimeBias(sampleExtraTimeBaseGoals(), homeTeam.rating - awayTeam.rating),
+  awayGoals: applyExtraTimeBias(sampleExtraTimeBaseGoals(), awayTeam.rating - homeTeam.rating),
+});
+
+const createKnockoutScorers = (
+  homeTeam: Team,
+  awayTeam: Team,
+  regulationHomeGoals: number,
+  regulationAwayGoals: number,
+  extraTimeHomeGoals: number,
+  extraTimeAwayGoals: number,
+): MatchScorers => {
+  const regulationMinutes = allocateGoalMinutes(
+    regulationHomeGoals,
+    regulationAwayGoals,
+    GOAL_MINUTE_BUCKETS_REGULATION,
+  );
+
+  const extraMinutes = allocateGoalMinutes(
+    extraTimeHomeGoals,
+    extraTimeAwayGoals,
+    GOAL_MINUTE_BUCKETS_EXTRA_TIME,
+  );
+
+  const homeMinutes = [...regulationMinutes.homeMinutes, ...extraMinutes.homeMinutes].sort(
+    (left, right) => left - right,
+  );
+  const awayMinutes = [...regulationMinutes.awayMinutes, ...extraMinutes.awayMinutes].sort(
+    (left, right) => left - right,
+  );
 
   return {
     home: generateScorersForTeam(homeTeam, homeMinutes),
@@ -201,18 +281,46 @@ export const simulateKnockoutRegulation = (
   homeTeam: Team,
   awayTeam: Team,
 ): KnockoutMatch => {
-  const { homeGoals, awayGoals } = generateScoreline(homeTeam, awayTeam);
-  const scorers = createScorers(homeTeam, awayTeam, homeGoals, awayGoals);
-  const isDraw = homeGoals === awayGoals;
-  const winnerTeamId = isDraw ? null : homeGoals > awayGoals ? homeTeam.id : awayTeam.id;
-  const loserTeamId = isDraw ? null : homeGoals > awayGoals ? awayTeam.id : homeTeam.id;
+  const regulation = generateScoreline(homeTeam, awayTeam);
+  let extraTimeHomeGoals = 0;
+  let extraTimeAwayGoals = 0;
+  let extraTimeHomeScore: number | null = null;
+  let extraTimeAwayScore: number | null = null;
+
+  if (regulation.homeGoals === regulation.awayGoals) {
+    const extraTime = generateExtraTimeScoreline(homeTeam, awayTeam);
+    extraTimeHomeGoals = extraTime.homeGoals;
+    extraTimeAwayGoals = extraTime.awayGoals;
+    extraTimeHomeScore = regulation.homeGoals + extraTimeHomeGoals;
+    extraTimeAwayScore = regulation.awayGoals + extraTimeAwayGoals;
+  }
+
+  const finalHomeScore =
+    extraTimeHomeScore !== null ? extraTimeHomeScore : regulation.homeGoals;
+  const finalAwayScore =
+    extraTimeAwayScore !== null ? extraTimeAwayScore : regulation.awayGoals;
+  const scorers = createKnockoutScorers(
+    homeTeam,
+    awayTeam,
+    regulation.homeGoals,
+    regulation.awayGoals,
+    extraTimeHomeGoals,
+    extraTimeAwayGoals,
+  );
+  const isDrawAfter120 = finalHomeScore === finalAwayScore;
+  const winnerTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? homeTeam.id : awayTeam.id;
+  const loserTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? awayTeam.id : homeTeam.id;
 
   return {
     ...match,
-    homeScore: homeGoals,
-    awayScore: awayGoals,
+    regulationHomeScore: regulation.homeGoals,
+    regulationAwayScore: regulation.awayGoals,
+    extraTimeHomeScore,
+    extraTimeAwayScore,
+    homeScore: finalHomeScore,
+    awayScore: finalAwayScore,
     scorers,
-    status: isDraw ? 'awaiting-penalties' : 'completed',
+    status: isDrawAfter120 ? 'awaiting-penalties' : 'completed',
     winnerTeamId,
     loserTeamId,
     predictedAt: new Date().toISOString(),

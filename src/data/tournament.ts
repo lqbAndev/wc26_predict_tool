@@ -251,6 +251,10 @@ const createEmptyKnockoutMatch = (round: KnockoutRound, slot: number): KnockoutM
     awayTeamId: null,
     homeSeedLabel: defaultSeeds.homeSeedLabel,
     awaySeedLabel: defaultSeeds.awaySeedLabel,
+    regulationHomeScore: null,
+    regulationAwayScore: null,
+    extraTimeHomeScore: null,
+    extraTimeAwayScore: null,
     homeScore: null,
     awayScore: null,
     scorers: null,
@@ -286,11 +290,26 @@ export const normalizeKnockoutMatches = (
         return baseMatch;
       }
 
+      const regulationHomeScore = persistedMatch.regulationHomeScore ?? persistedMatch.homeScore ?? null;
+      const regulationAwayScore = persistedMatch.regulationAwayScore ?? persistedMatch.awayScore ?? null;
+      const shouldMirrorFinalToExtraTime =
+        (persistedMatch.status === 'awaiting-penalties' || Boolean(persistedMatch.penalty)) &&
+        persistedMatch.extraTimeHomeScore == null &&
+        persistedMatch.extraTimeAwayScore == null;
+
       return {
         ...baseMatch,
         ...persistedMatch,
         homeSeedLabel: persistedMatch.homeSeedLabel ?? baseMatch.homeSeedLabel,
         awaySeedLabel: persistedMatch.awaySeedLabel ?? baseMatch.awaySeedLabel,
+        regulationHomeScore,
+        regulationAwayScore,
+        extraTimeHomeScore: shouldMirrorFinalToExtraTime
+          ? persistedMatch.homeScore ?? null
+          : persistedMatch.extraTimeHomeScore ?? baseMatch.extraTimeHomeScore,
+        extraTimeAwayScore: shouldMirrorFinalToExtraTime
+          ? persistedMatch.awayScore ?? null
+          : persistedMatch.extraTimeAwayScore ?? baseMatch.extraTimeAwayScore,
       };
     });
 

@@ -4,6 +4,7 @@ import type {
   KnockoutMatch,
   KnockoutRound,
   KnockoutSeeds,
+  KnockoutTeamOrigin,
   TeamStanding,
   ThirdPlaceStanding,
 } from '../types/tournament';
@@ -34,6 +35,46 @@ export const buildKnockoutSeeds = (
     groupRunnersUp,
     bestThirds: thirdPlaceTable.slice(0, 8),
   };
+};
+
+const formatRankLabel = (rank: 1 | 2 | 3, source: KnockoutTeamOrigin['source']) => {
+  if (rank === 1) return '1st';
+  if (rank === 2) return '2nd';
+
+  return source === 'best-third' ? '3rd (Best 3rd)' : '3rd';
+};
+
+export const buildKnockoutTeamOrigins = (seeds: KnockoutSeeds): Record<string, KnockoutTeamOrigin> => {
+  const origins: Record<string, KnockoutTeamOrigin> = {};
+
+  seeds.groupWinners.forEach((entry) => {
+    origins[entry.teamId] = {
+      group: entry.group,
+      rank: 1,
+      source: 'group-winner',
+      label: `Group ${entry.group} - ${formatRankLabel(1, 'group-winner')}`,
+    };
+  });
+
+  seeds.groupRunnersUp.forEach((entry) => {
+    origins[entry.teamId] = {
+      group: entry.group,
+      rank: 2,
+      source: 'group-runner-up',
+      label: `Group ${entry.group} - ${formatRankLabel(2, 'group-runner-up')}`,
+    };
+  });
+
+  seeds.bestThirds.forEach((entry) => {
+    origins[entry.teamId] = {
+      group: entry.group,
+      rank: 3,
+      source: 'best-third',
+      label: `Group ${entry.group} - ${formatRankLabel(3, 'best-third')}`,
+    };
+  });
+
+  return origins;
 };
 
 const createSeedLabel = (
