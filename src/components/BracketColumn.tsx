@@ -12,10 +12,10 @@ interface BracketColumnProps {
 }
 
 const HEIGHT_BY_ROUND: Record<KnockoutRound, string> = {
-  roundOf32: 'xl:min-h-[910px]',
-  roundOf16: 'xl:min-h-[760px]',
-  quarterfinals: 'xl:min-h-[500px]',
-  semifinals: 'xl:min-h-[280px]',
+  roundOf32: 'xl:min-h-[860px]',
+  roundOf16: 'xl:min-h-[700px]',
+  quarterfinals: 'xl:min-h-[520px]',
+  semifinals: 'xl:min-h-[360px]',
   thirdPlace: 'xl:min-h-[240px]',
   final: 'xl:min-h-[260px]',
 };
@@ -29,10 +29,25 @@ export const BracketColumn = ({
   onResolvePenalty,
 }: BracketColumnProps) => {
   const completedCount = matches.filter((match) => match.status === 'completed').length;
-  const stackClass =
-    round === 'roundOf32'
-      ? 'mt-3 flex flex-col gap-2.5 xl:h-[calc(100%-2.35rem)] xl:justify-between'
-      : 'mt-3 flex flex-col gap-3 xl:h-[calc(100%-2.35rem)] xl:justify-around';
+  const stackClass = (() => {
+    if (round === 'roundOf32') {
+      return 'mt-3 flex flex-col gap-2 xl:h-[calc(100%-2.35rem)] xl:justify-between';
+    }
+
+    if (round === 'roundOf16') {
+      return 'mt-3 flex flex-col gap-3 xl:h-[calc(100%-2.35rem)] xl:justify-between';
+    }
+
+    if (round === 'quarterfinals') {
+      return 'mt-3 flex flex-col gap-4 xl:h-[calc(100%-2.35rem)] xl:justify-between';
+    }
+
+    if (round === 'semifinals') {
+      return 'mt-3 flex flex-col gap-4 xl:h-[calc(100%-2.35rem)] xl:justify-center';
+    }
+
+    return 'mt-3 flex flex-col gap-3 xl:h-[calc(100%-2.35rem)] xl:justify-around';
+  })();
 
   return (
     <div
