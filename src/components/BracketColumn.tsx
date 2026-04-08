@@ -1,10 +1,11 @@
 import { ROUND_LABELS } from '../data/tournament';
-import type { KnockoutMatch, KnockoutRound } from '../types/tournament';
+import type { KnockoutMatch, KnockoutRound, KnockoutTeamOrigin } from '../types/tournament';
 import { KnockoutMatchCard } from './KnockoutMatchCard';
 
 interface BracketColumnProps {
   round: KnockoutRound;
   matches: KnockoutMatch[];
+  teamOrigins: Record<string, KnockoutTeamOrigin>;
   showConnector?: boolean;
   onPredict: (round: KnockoutRound, matchId: string) => void;
   onResolvePenalty: (round: KnockoutRound, matchId: string) => void;
@@ -22,6 +23,7 @@ const HEIGHT_BY_ROUND: Record<KnockoutRound, string> = {
 export const BracketColumn = ({
   round,
   matches,
+  teamOrigins,
   showConnector = true,
   onPredict,
   onResolvePenalty,
@@ -51,6 +53,7 @@ export const BracketColumn = ({
             match={match}
             round={round}
             title={`Match ${match.slot + 1}`}
+            teamOrigins={teamOrigins}
             onPredict={onPredict}
             onResolvePenalty={onResolvePenalty}
           />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Orbit, Sparkles } from 'lucide-react';
-import type { KnockoutMatch, KnockoutRound } from '../types/tournament';
+import { Orbit } from 'lucide-react';
+import type { KnockoutMatch, KnockoutRound, KnockoutTeamOrigin } from '../types/tournament';
 import { BracketColumn } from './BracketColumn';
 import { ChampionCup, TriondaBall, WorldCupLogo } from './BrandAssets';
 import { Flag } from './Flag';
@@ -8,6 +8,7 @@ import { KnockoutMatchCard } from './KnockoutMatchCard';
 
 interface KnockoutBracketProps {
   knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>;
+  teamOrigins: Record<string, KnockoutTeamOrigin>;
   championName: string | null;
   onPredict: (round: KnockoutRound, matchId: string) => void;
   onResolvePenalty: (round: KnockoutRound, matchId: string) => void;
@@ -37,6 +38,7 @@ const PATHWAY_2: Array<{ round: KnockoutRound; matches: (matches: Record<Knockou
 
 export const KnockoutBracket = ({
   knockoutMatches,
+  teamOrigins,
   championName,
   onPredict,
   onResolvePenalty,
@@ -83,8 +85,8 @@ export const KnockoutBracket = ({
             type="button"
             onClick={() => setActiveView(tab.id)}
             className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${activeView === tab.id
-                ? 'border-host-mexico/35 bg-host-mexico/16 text-host-ice'
-                : 'border-white/10 bg-white/[0.04] text-host-ice/68 hover:border-host-ice/22 hover:text-white'
+              ? 'border-host-mexico/35 bg-host-mexico/16 text-host-ice'
+              : 'border-white/10 bg-white/[0.04] text-host-ice/68 hover:border-host-ice/22 hover:text-white'
               }`}
           >
             {tab.label}
@@ -97,18 +99,19 @@ export const KnockoutBracket = ({
           <div className="rounded-[30px] border border-white/8 bg-black/15 p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="field-label">Center Stage</p>
+                <p className="field-label">Last Stage</p>
                 <h3 className="mt-2 text-2xl font-bold text-white">Finals</h3>
               </div>
-              <Sparkles className="h-5 w-5 text-host-canada" />
+              <WorldCupLogo size={48} className="h-5 w-5 text-host-canada" />
             </div>
 
             <div className="mt-5 space-y-4">
               <KnockoutMatchCard
                 match={finalMatch}
                 round="final"
-                title="Showpiece"
+                title="CHAMPION"
                 variant="center"
+                teamOrigins={teamOrigins}
                 onPredict={onPredict}
                 onResolvePenalty={onResolvePenalty}
               />
@@ -116,8 +119,9 @@ export const KnockoutBracket = ({
               <KnockoutMatchCard
                 match={thirdPlaceMatch}
                 round="thirdPlace"
-                title="Placement"
+                title="3rd PLACE"
                 variant="third"
+                teamOrigins={teamOrigins}
                 onPredict={onPredict}
                 onResolvePenalty={onResolvePenalty}
               />
@@ -133,6 +137,7 @@ export const KnockoutBracket = ({
                   key={`${activeView}-${column.round}`}
                   round={column.round}
                   matches={column.matches(knockoutMatches)}
+                  teamOrigins={teamOrigins}
                   showConnector={index < activePathway.length - 1}
                   onPredict={onPredict}
                   onResolvePenalty={onResolvePenalty}

@@ -23,7 +23,12 @@ import {
   getQualifiedTeamIds,
   isGroupStageComplete,
 } from '../utils/groupStage';
-import { advanceWinnerToNextRound, buildKnockoutBracket, buildKnockoutSeeds } from '../utils/knockout';
+import {
+  advanceWinnerToNextRound,
+  buildKnockoutBracket,
+  buildKnockoutSeeds,
+  buildKnockoutTeamOrigins,
+} from '../utils/knockout';
 import { simulateGroupMatch, simulateKnockoutRegulation, simulatePenaltyShootout } from '../utils/random';
 import { buildTopScorers } from '../utils/topScorers';
 
@@ -37,6 +42,7 @@ const deriveTournamentState = (core: TournamentCoreState): TournamentDerivedStat
     knockoutSeeds.groupWinners.length === 12 &&
     knockoutSeeds.groupRunnersUp.length === 12 &&
     knockoutSeeds.bestThirds.length === 8;
+  const knockoutTeamOrigins = knockoutReady ? buildKnockoutTeamOrigins(knockoutSeeds) : {};
   const qualifiedTeamIds = knockoutReady ? getQualifiedTeamIds(standingsByGroup, thirdPlaceTable) : [];
   const topScorers = buildTopScorers(core.groupMatches, core.knockoutMatches);
   const championTeamId = core.knockoutMatches.final[0]?.winnerTeamId ?? null;
@@ -49,6 +55,7 @@ const deriveTournamentState = (core: TournamentCoreState): TournamentDerivedStat
     groupStageComplete,
     knockoutReady,
     knockoutSeeds,
+    knockoutTeamOrigins,
     championTeamId,
     championName: findChampionName(championTeamId),
   };
@@ -95,6 +102,7 @@ export const useTournament = () => {
         qualifiedTeamIds: derivedState.qualifiedTeamIds,
         groupStageComplete: derivedState.groupStageComplete,
         knockoutReady: derivedState.knockoutReady,
+        knockoutTeamOrigins: derivedState.knockoutTeamOrigins,
         championTeamId: derivedState.championTeamId,
         championName: derivedState.championName,
       },
