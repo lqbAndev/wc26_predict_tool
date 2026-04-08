@@ -40,7 +40,7 @@ const formatScorerLine = (teamName: string | null, events: GoalEvent[]) => {
   const label = teamName ?? 'TBD';
 
   if (!events.length) {
-    return `${label}: Khong co ban thang`;
+    return `${label}: Không có bàn thắng`;
   }
 
   const scorers = events.map((event) => `${event.playerName} ${event.minute}'`).join(', ');
@@ -52,14 +52,14 @@ const formatScore = (home: number | null, away: number | null) =>
 
 const getStatusLabel = (match: KnockoutMatch, hasTeams: boolean) => {
   if (match.status === 'completed') {
-    return 'Da chot';
+    return 'Đã chốt';
   }
 
   if (match.status === 'awaiting-penalties') {
-    return 'Cho penalty';
+    return 'Chờ penalty';
   }
 
-  return hasTeams ? 'Chua du doan' : 'Cho cap dau';
+  return hasTeams ? 'Chưa dự đoán' : 'Chờ cặp đấu';
 };
 
 export const KnockoutMatchCard = ({
@@ -101,12 +101,12 @@ export const KnockoutMatchCard = ({
     match.extraTimeAwayScore ?? match.regulationAwayScore ?? match.awayScore;
 
   const actionLabel = waitingPenalty
-    ? 'Da penalty'
+    ? 'Đá penalty'
     : canPredict
-      ? 'Du doan'
+      ? 'Dự đoán'
       : isCompleted
-        ? 'Tran da chot'
-        : 'Cho du cap dau';
+        ? 'Trận đã chốt'
+        : 'Chờ đủ cặp đấu';
 
   const handleAction = () => {
     if (waitingPenalty) {
@@ -124,6 +124,7 @@ export const KnockoutMatchCard = ({
     seedLabel: string | null,
     score: number | null,
     originLabel: string | null,
+    showOrigin: boolean,
     winner: boolean,
   ) => (
     <div className={`flex items-start justify-between gap-3 px-3 py-2 ${winner ? 'bg-host-mexico/[0.08]' : ''}`}>
@@ -138,9 +139,9 @@ export const KnockoutMatchCard = ({
             {teamName ?? seedLabel ?? 'TBD'}
           </span>
 
-          {teamName ? (
+          {teamName && showOrigin ? (
             <span className="mt-0.5 block text-[10px] uppercase tracking-[0.12em] text-host-ice/58">
-              {originLabel ?? 'Dang xac dinh nguon'}
+              {originLabel ?? 'Đang xác định nguồn'}
             </span>
           ) : null}
         </div>
@@ -168,9 +169,23 @@ export const KnockoutMatchCard = ({
       </div>
 
       <div className="mt-2 overflow-hidden rounded-[16px] border border-white/8 bg-black/15">
-        {renderTeamRow(homeTeam?.name ?? null, match.homeSeedLabel, homeDisplayScore, homeOriginLabel, homeWinner)}
+        {renderTeamRow(
+          homeTeam?.name ?? null,
+          match.homeSeedLabel,
+          homeDisplayScore,
+          homeOriginLabel,
+          round === 'roundOf32',
+          homeWinner,
+        )}
         <div className="h-px bg-white/8" />
-        {renderTeamRow(awayTeam?.name ?? null, match.awaySeedLabel, awayDisplayScore, awayOriginLabel, awayWinner)}
+        {renderTeamRow(
+          awayTeam?.name ?? null,
+          match.awaySeedLabel,
+          awayDisplayScore,
+          awayOriginLabel,
+          round === 'roundOf32',
+          awayWinner,
+        )}
       </div>
 
       {hasRegulationScore || hasExtraTimeScore || match.penalty || (isCompleted && totalGoals === 0) ? (
@@ -195,7 +210,7 @@ export const KnockoutMatchCard = ({
 
           {isCompleted && totalGoals === 0 ? (
             <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-host-ice/62">
-              Khong co ban thang
+              Không có bàn thắng
             </span>
           ) : null}
         </div>

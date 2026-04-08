@@ -12,7 +12,7 @@ interface BracketColumnProps {
 }
 
 const HEIGHT_BY_ROUND: Record<KnockoutRound, string> = {
-  roundOf32: 'xl:min-h-[980px]',
+  roundOf32: 'xl:min-h-[910px]',
   roundOf16: 'xl:min-h-[760px]',
   quarterfinals: 'xl:min-h-[500px]',
   semifinals: 'xl:min-h-[280px]',
@@ -29,6 +29,10 @@ export const BracketColumn = ({
   onResolvePenalty,
 }: BracketColumnProps) => {
   const completedCount = matches.filter((match) => match.status === 'completed').length;
+  const stackClass =
+    round === 'roundOf32'
+      ? 'mt-3 flex flex-col gap-2.5 xl:h-[calc(100%-2.35rem)] xl:justify-between'
+      : 'mt-3 flex flex-col gap-3 xl:h-[calc(100%-2.35rem)] xl:justify-around';
 
   return (
     <div
@@ -46,7 +50,7 @@ export const BracketColumn = ({
         </span>
       </div>
 
-      <div className="mt-3 flex flex-col gap-3 xl:h-[calc(100%-2.35rem)] xl:justify-around">
+      <div className={stackClass}>
         {matches.map((match) => (
           <KnockoutMatchCard
             key={match.id}
