@@ -12,10 +12,10 @@ interface BracketColumnProps {
 }
 
 const HEIGHT_BY_ROUND: Record<KnockoutRound, string> = {
-  roundOf32: 'xl:min-h-[980px]',
-  roundOf16: 'xl:min-h-[760px]',
-  quarterfinals: 'xl:min-h-[500px]',
-  semifinals: 'xl:min-h-[280px]',
+  roundOf32: 'xl:min-h-[860px]',
+  roundOf16: 'xl:min-h-[700px]',
+  quarterfinals: 'xl:min-h-[520px]',
+  semifinals: 'xl:min-h-[360px]',
   thirdPlace: 'xl:min-h-[240px]',
   final: 'xl:min-h-[260px]',
 };
@@ -29,10 +29,29 @@ export const BracketColumn = ({
   onResolvePenalty,
 }: BracketColumnProps) => {
   const completedCount = matches.filter((match) => match.status === 'completed').length;
+  const stackClass = (() => {
+    if (round === 'roundOf32') {
+      return 'mt-3 flex flex-1 flex-col gap-2 xl:justify-between';
+    }
+
+    if (round === 'roundOf16') {
+      return 'mt-3 flex flex-1 flex-col gap-3 xl:justify-around';
+    }
+
+    if (round === 'quarterfinals') {
+      return 'mt-3 flex flex-1 flex-col gap-4 xl:justify-around';
+    }
+
+    if (round === 'semifinals') {
+      return 'mt-3 flex flex-1 flex-col gap-4 xl:justify-center';
+    }
+
+    return 'mt-3 flex flex-1 flex-col gap-3 xl:justify-around';
+  })();
 
   return (
     <div
-      className={`relative rounded-[24px] border border-white/8 bg-white/[0.03] p-3 ${HEIGHT_BY_ROUND[round]} ${
+      className={`relative flex flex-col rounded-[24px] border border-white/8 bg-white/[0.03] p-3 ${HEIGHT_BY_ROUND[round]} ${
         showConnector
           ? 'after:absolute after:right-[-18px] after:top-1/2 after:hidden after:h-px after:w-4 after:-translate-y-1/2 after:bg-gradient-to-r after:from-host-ice/20 after:to-transparent xl:after:block'
           : ''
@@ -46,7 +65,7 @@ export const BracketColumn = ({
         </span>
       </div>
 
-      <div className="mt-3 flex flex-col gap-3 xl:h-[calc(100%-2.35rem)] xl:justify-around">
+      <div className={stackClass}>
         {matches.map((match) => (
           <KnockoutMatchCard
             key={match.id}

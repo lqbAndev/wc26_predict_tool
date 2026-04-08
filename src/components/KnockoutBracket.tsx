@@ -131,7 +131,7 @@ export const KnockoutBracket = ({
       ) : (
         <div className="mt-6 rounded-[30px] border border-white/8 bg-black/15 p-4 sm:p-5">
           <div className="bracket-scroll overflow-x-auto overflow-y-hidden pb-3">
-            <div className="grid min-w-[1180px] grid-cols-[minmax(300px,2.25fr)_minmax(260px,1.75fr)_minmax(240px,1.35fr)_minmax(220px,1fr)] gap-6">
+            <div className="grid min-w-[1140px] grid-cols-[repeat(4,minmax(260px,1fr))] gap-5">
               {activePathway.map((column, index) => (
                 <BracketColumn
                   key={`${activeView}-${column.round}`}
