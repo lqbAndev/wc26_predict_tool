@@ -173,8 +173,8 @@ const GROUP_MATCHUPS = [
   { matchday: 1, homeIndex: 0, awayIndex: 1 },
   { matchday: 1, homeIndex: 2, awayIndex: 3 },
   { matchday: 2, homeIndex: 0, awayIndex: 2 },
-  { matchday: 2, homeIndex: 1, awayIndex: 3 },
-  { matchday: 3, homeIndex: 0, awayIndex: 3 },
+  { matchday: 2, homeIndex: 3, awayIndex: 1 },
+  { matchday: 3, homeIndex: 3, awayIndex: 0 },
   { matchday: 3, homeIndex: 1, awayIndex: 2 },
 ] as const;
 
