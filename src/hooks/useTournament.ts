@@ -139,7 +139,7 @@ export const useTournament = () => {
 
         const knockoutMatches = hasInitializedKnockout(normalizedState)
           ? normalizedState.knockoutMatches
-          : buildKnockoutBracket(currentDerivedState.knockoutSeeds);
+          : buildKnockoutBracket(currentDerivedState.knockoutSeeds, currentDerivedState.standingsByGroup);
 
         return {
           ...normalizedState,
