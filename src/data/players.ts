@@ -23,7 +23,8 @@ const makeTeam = (gk: string[], df: string[], mf: string[], fw: string[]): BaseP
 ];
 
 const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
-  'Mexico': makeTeam(['Guillermo Ochoa'], ['Cesar Montes', 'Johan Vasquez', 'Jesus Gallardo', 'Jorge Sanchez'], ['Edson Alvarez', 'Luis Chavez', 'Orbelin Pineda'], ['Hirving Lozano', 'Santi Gimenez', 'Henry Martin']),
+  'Mexico': makeTeam(['Guillermo Ochoa'], ['Cesar Montes', 'Johan Vasquez', 'Jesus Gallardo', 'Jorge Sanchez', 'Kevin Alvarez'], ['Edson Alvarez', 'Luis Chavez', 'Orbelin Pineda', 'Denzell Garcia', 'Obed Vargas'], ['Hirving Lozano', 'Santi Gimenez', 'Henry Martin', '
+Julian Quinones']),
   'South Africa': makeTeam(['Ronwen Williams'], ['Khuliso Mudau', 'Mothobi Mvala', 'Siyanda Xulu', 'Aubrey Modiba'], ['Teboho Mokoena', 'Sphephelo Sithole', 'Themba Zwane'], ['Percy Tau', 'Mihlali Mayambela', 'Evidence Makgopa']),
   'South Korea': makeTeam(['Jo Hyeon-woo'], ['Kim Min-jae', 'Jung Seung-hyun', 'Kim Young-gwon', 'Seol Young-woo'], ['Hwang In-beom', 'Lee Kang-in', 'Lee Jae-sung'], ['Son Heung-min', 'Hwang Hee-chan', 'Cho Gue-sung']),
   'Czech Republic': makeTeam(['Jindrich Stanek'], ['Tomas Holes', 'Robin Hranac', 'Ladislav Krejci', 'Vladimir Coufal'], ['Tomas Soucek', 'Lukas Provod', 'Antonin Barak'], ['Patrik Schick', 'Adam Hlozek', 'Vaclav Cerny']),
