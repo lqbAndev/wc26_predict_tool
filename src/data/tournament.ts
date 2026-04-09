@@ -2,6 +2,7 @@ import { buildTeamRoster } from './players';
 import type {
   GroupId,
   GroupMatch,
+  MatchScorers,
   KnockoutMatch,
   KnockoutRound,
   Team,
@@ -203,6 +204,70 @@ export const createInitialGroupMatches = (): GroupMatch[] =>
       predictedAt: null,
     })),
   );
+
+const sameTeamPair = (left: GroupMatch, right: GroupMatch) =>
+  (left.homeTeamId === right.homeTeamId && left.awayTeamId === right.awayTeamId) ||
+  (left.homeTeamId === right.awayTeamId && left.awayTeamId === right.homeTeamId);
+
+const swapScorersSides = (scorers: MatchScorers | null): MatchScorers | null => {
+  if (!scorers) {
+    return null;
+  }
+
+  return {
+    home: scorers.away,
+    away: scorers.home,
+  };
+};
+
+export const normalizeGroupMatches = (incomingMatches?: GroupMatch[]): GroupMatch[] => {
+  const canonicalMatches = createInitialGroupMatches();
+
+  if (!incomingMatches?.length) {
+    return canonicalMatches;
+  }
+
+  return canonicalMatches.map((canonicalMatch) => {
+    const persistedMatch =
+      incomingMatches.find((match) => match.id === canonicalMatch.id) ??
+      incomingMatches.find((match) => sameTeamPair(match, canonicalMatch));
+
+    if (!persistedMatch) {
+      return canonicalMatch;
+    }
+
+    const sameOrientation =
+      persistedMatch.homeTeamId === canonicalMatch.homeTeamId &&
+      persistedMatch.awayTeamId === canonicalMatch.awayTeamId;
+    const reversedOrientation =
+      persistedMatch.homeTeamId === canonicalMatch.awayTeamId &&
+      persistedMatch.awayTeamId === canonicalMatch.homeTeamId;
+
+    if (sameOrientation) {
+      return {
+        ...canonicalMatch,
+        homeScore: persistedMatch.homeScore,
+        awayScore: persistedMatch.awayScore,
+        scorers: persistedMatch.scorers,
+        status: persistedMatch.status,
+        predictedAt: persistedMatch.predictedAt,
+      };
+    }
+
+    if (reversedOrientation) {
+      return {
+        ...canonicalMatch,
+        homeScore: persistedMatch.awayScore,
+        awayScore: persistedMatch.homeScore,
+        scorers: swapScorersSides(persistedMatch.scorers),
+        status: persistedMatch.status,
+        predictedAt: persistedMatch.predictedAt,
+      };
+    }
+
+    return canonicalMatch;
+  });
+};
 
 const getDefaultSeedLabels = (round: KnockoutRound, slot: number) => {
   switch (round) {

@@ -2,6 +2,7 @@ import { startTransition, useEffect, useState } from 'react';
 import {
   TEAMS_BY_ID,
   createInitialTournamentCoreState,
+  normalizeGroupMatches,
   normalizeKnockoutMatches,
 } from '../data/tournament';
 import type {
@@ -63,6 +64,7 @@ const deriveTournamentState = (core: TournamentCoreState): TournamentDerivedStat
 
 const normalizeCoreState = (state: TournamentCoreState): TournamentCoreState => ({
   ...state,
+  groupMatches: normalizeGroupMatches(state.groupMatches),
   knockoutMatches: normalizeKnockoutMatches(state.knockoutMatches),
 });
 
