@@ -1,7 +1,7 @@
-import { Award, Crosshair } from 'lucide-react';
+import { useState } from 'react';
+import { Award, ChevronDown, Clock, Crosshair } from 'lucide-react';
 import { ROUND_LABELS, TEAMS_BY_ID } from '../data/tournament';
 import type {
-  GoalEvent,
   KnockoutMatch,
   KnockoutRound,
   KnockoutTeamOrigin,
@@ -35,17 +35,6 @@ const SCORE_VARIANTS = {
   center: 'text-xl',
   third: 'text-lg',
 } as const;
-
-const formatScorerLine = (teamName: string | null, events: GoalEvent[]) => {
-  const label = teamName ?? 'TBD';
-
-  if (!events.length) {
-    return `${label}: Không có bàn thắng`;
-  }
-
-  const scorers = events.map((event) => `${event.playerName} ${event.minute}'`).join(', ');
-  return `${label}: ${scorers}`;
-};
 
 const formatScore = (home: number | null, away: number | null) =>
   home === null || away === null ? '- : -' : `${home} : ${away}`;
@@ -90,9 +79,6 @@ export const KnockoutMatchCard = ({
       ? 'border-host-canada/28 bg-host-canada/12 text-host-ice'
       : 'border-white/10 bg-white/[0.04] text-host-ice/62';
 
-  const homeScorerLine = formatScorerLine(homeTeam?.name ?? match.homeSeedLabel, match.scorers?.home ?? []);
-  const awayScorerLine = formatScorerLine(awayTeam?.name ?? match.awaySeedLabel, match.scorers?.away ?? []);
-
   const homeOriginLabel = match.homeTeamId ? teamOrigins[match.homeTeamId]?.label ?? null : null;
   const awayOriginLabel = match.awayTeamId ? teamOrigins[match.awayTeamId]?.label ?? null : null;
   const homeDisplayScore =
@@ -119,6 +105,12 @@ export const KnockoutMatchCard = ({
     }
   };
 
+  // Scorer/timeline state
+  const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const hasTimeline = match.timeline && match.timeline.length > 0;
+  const homeTimelineEvents = match.timeline?.filter((e) => e.side === 'home') ?? [];
+  const awayTimelineEvents = match.timeline?.filter((e) => e.side === 'away') ?? [];
+
   const renderTeamRow = (
     teamName: string | null,
     seedLabel: string | null,
@@ -132,9 +124,8 @@ export const KnockoutMatchCard = ({
         <Flag teamName={teamName} size={18} />
         <div className="min-w-0">
           <span
-            className={`block whitespace-normal break-words font-semibold leading-5 text-white ${NAME_VARIANTS[variant]} ${
-              !teamName ? 'text-white/62' : ''
-            }`}
+            className={`block whitespace-normal break-words font-semibold leading-5 text-white ${NAME_VARIANTS[variant]} ${!teamName ? 'text-white/62' : ''
+              }`}
           >
             {teamName ?? seedLabel ?? 'TBD'}
           </span>
@@ -188,6 +179,7 @@ export const KnockoutMatchCard = ({
         )}
       </div>
 
+      {/* Score badges (regulation / extra time / penalty) */}
       {hasRegulationScore || hasExtraTimeScore || match.penalty || (isCompleted && totalGoals === 0) ? (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.18em]">
           {hasRegulationScore ? (
@@ -216,25 +208,139 @@ export const KnockoutMatchCard = ({
         </div>
       ) : null}
 
-      {totalGoals > 0 ? (
-        <div className="mt-2 rounded-[14px] border border-white/8 bg-white/[0.04] px-3 py-3 text-[13px] leading-6 text-white/82">
-          <div className="break-words">{homeScorerLine}</div>
-          <div className="mt-1 break-words">{awayScorerLine}</div>
+      {/* Expandable Scorers for knockout */}
+      {(isCompleted || waitingPenalty) && (hasTimeline || match.penalty) ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setTimelineExpanded(!timelineExpanded)}
+            className="inline-flex w-full items-center justify-between gap-2 rounded-[14px] border border-white/8 bg-white/[0.03] px-3 py-2 text-left text-sm text-white/70 transition hover:bg-white/[0.06]"
+          >
+            <span className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-host-mexico/60" />
+              <span className="text-[10px] uppercase tracking-[0.18em]">Diễn biến trận đấu</span>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-white/40 transition-transform duration-200 ${timelineExpanded ? 'rotate-180' : ''
+                }`}
+            />
+          </button>
+
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${timelineExpanded ? 'mt-2 max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+          >
+            {/* Per-team scorers */}
+            {hasTimeline && (
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="rounded-[14px] border border-white/8 bg-white/[0.03] p-2.5">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-emerald-200/50">
+                    {homeTeam?.shortName ?? 'Home'}
+                  </p>
+                  <div className="mt-1.5 space-y-0.5">
+                    {homeTimelineEvents.length > 0 ? (
+                      homeTimelineEvents.map((event, idx) => (
+                        <div key={idx} className="flex items-baseline gap-1.5 text-[12px] text-white/75">
+                          <span className="shrink-0 font-mono text-[10px] text-emerald-300/45">
+                            {event.displayMinute}
+                          </span>
+                          <span>
+                            {event.playerName}
+                            {event.isPenalty && (
+                              <span className="ml-0.5 text-[9px] font-bold text-amber-300/70">(P)</span>
+                            )}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-white/35">Không ghi bàn</p>
+                    )}
+                  </div>
+                </div>
+                <div className="rounded-[14px] border border-white/8 bg-white/[0.03] p-2.5">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-200/50">
+                    {awayTeam?.shortName ?? 'Away'}
+                  </p>
+                  <div className="mt-1.5 space-y-0.5">
+                    {awayTimelineEvents.length > 0 ? (
+                      awayTimelineEvents.map((event, idx) => (
+                        <div key={idx} className="flex items-baseline gap-1.5 text-[12px] text-white/75">
+                          <span className="shrink-0 font-mono text-[10px] text-cyan-300/45">
+                            {event.displayMinute}
+                          </span>
+                          <span>
+                            {event.playerName}
+                            {event.isPenalty && (
+                              <span className="ml-0.5 text-[9px] font-bold text-amber-300/70">(P)</span>
+                            )}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-white/35">Không ghi bàn</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Penalty shootout separate section */}
+            {match.penalty && (
+              <div className={`${hasTimeline ? 'mt-2' : ''} rounded-[14px] border border-host-canada/20 bg-host-canada/8 p-2.5`}>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-host-canada/70 mb-1.5 flex items-center gap-1.5">
+                  <Award className="h-3 w-3" />
+                  Luân lưu Penalty (sau 120')
+                </p>
+                <div className="flex items-center gap-3 text-sm font-semibold">
+                  <div className="flex items-center gap-2">
+                    <Flag teamName={homeTeam?.name ?? null} size={16} />
+                    <span className="text-white">{homeTeam?.shortName ?? 'Home'}</span>
+                    <span className={`text-lg font-bold ${match.penalty.home > match.penalty.away ? 'text-host-mexico' : 'text-white/60'}`}>
+                      {match.penalty.home}
+                    </span>
+                  </div>
+                  <span className="text-white/30">-</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-lg font-bold ${match.penalty.away > match.penalty.home ? 'text-host-mexico' : 'text-white/60'}`}>
+                      {match.penalty.away}
+                    </span>
+                    <span className="text-white">{awayTeam?.shortName ?? 'Away'}</span>
+                    <Flag teamName={awayTeam?.name ?? null} size={16} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      ) : null}
+      ) : /* Legacy fallback: scorers without timeline */
+        totalGoals > 0 && !hasTimeline ? (
+          <div className="mt-2 rounded-[14px] border border-white/8 bg-white/[0.04] px-3 py-3 text-[13px] leading-6 text-white/82">
+            <div className="break-words">
+              {homeTeam?.name ?? match.homeSeedLabel ?? 'TBD'}:{' '}
+              {match.scorers?.home.length
+                ? match.scorers.home.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
+                : 'Không có bàn thắng'}
+            </div>
+            <div className="mt-1 break-words">
+              {awayTeam?.name ?? match.awaySeedLabel ?? 'TBD'}:{' '}
+              {match.scorers?.away.length
+                ? match.scorers.away.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
+                : 'Không có bàn thắng'}
+            </div>
+          </div>
+        ) : null}
 
       {canPredict || waitingPenalty ? (
         <button
           type="button"
           disabled={!canPredict && !waitingPenalty}
           onClick={handleAction}
-          className={`mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${
-            waitingPenalty
+          className={`mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition ${waitingPenalty
               ? 'border border-host-canada/35 bg-host-canada/16 text-host-ice hover:-translate-y-0.5 hover:bg-host-canada/22'
               : canPredict
                 ? 'border border-host-mexico/35 bg-host-mexico/16 text-host-ice hover:-translate-y-0.5 hover:bg-host-mexico/22'
                 : 'cursor-not-allowed border border-white/10 bg-white/5 text-white/35'
-          }`}
+            }`}
         >
           {waitingPenalty ? <Award className="h-4 w-4" /> : <Crosshair className="h-4 w-4" />}
           {actionLabel}
