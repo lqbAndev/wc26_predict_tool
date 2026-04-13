@@ -1,5 +1,7 @@
+import { useState } from 'react';
+import { ChevronDown, Clock } from 'lucide-react';
 import { TEAMS_BY_ID } from '../data/tournament';
-import type { GoalEvent, GroupMatch } from '../types/tournament';
+import type { GroupMatch } from '../types/tournament';
 import { Flag } from './Flag';
 
 interface MatchCardProps {
@@ -7,13 +9,15 @@ interface MatchCardProps {
   onPredict: (matchId: string) => void;
 }
 
-const formatEvents = (events: GoalEvent[]) =>
-  events.map((event) => `${event.playerName} ${event.minute}'`).join(', ');
-
 export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
   const homeTeam = TEAMS_BY_ID[match.homeTeamId];
   const awayTeam = TEAMS_BY_ID[match.awayTeamId];
   const isCompleted = match.status === 'completed';
+  const [expanded, setExpanded] = useState(false);
+  const hasTimeline = match.timeline && match.timeline.length > 0;
+
+  const homeEvents = match.timeline?.filter((e) => e.side === 'home') ?? [];
+  const awayEvents = match.timeline?.filter((e) => e.side === 'away') ?? [];
 
   return (
     <article className="rounded-[28px] border border-white/10 bg-black/15 p-4 shadow-glow">
@@ -52,21 +56,102 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-          <p className="text-xs uppercase tracking-[0.22em] text-emerald-200/60">{homeTeam.shortName}</p>
-          <p className="mt-2 text-sm leading-6 text-white/80">
-            {match.scorers?.home.length ? formatEvents(match.scorers.home) : 'Chưa có bàn thắng.'}
-          </p>
-        </div>
+      {/* Expandable Scorers */}
+      {isCompleted && hasTimeline ? (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="inline-flex w-full items-center justify-between gap-2 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-2 text-left text-sm text-white/70 transition hover:bg-white/[0.06]"
+          >
+            <span className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-emerald-300/60" />
+              <span className="text-xs uppercase tracking-[0.18em]">Diễn biến trận đấu</span>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-white/40 transition-transform duration-200 ${
+                expanded ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
 
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-          <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/60">{awayTeam.shortName}</p>
-          <p className="mt-2 text-sm leading-6 text-white/80">
-            {match.scorers?.away.length ? formatEvents(match.scorers.away) : 'Chưa có bàn thắng.'}
-          </p>
+          <div
+            className={`timeline-collapse overflow-hidden transition-all duration-300 ease-in-out ${
+              expanded ? 'mt-2 max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="grid gap-2 md:grid-cols-2">
+              {/* Home scorers */}
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <p className="text-xs uppercase tracking-[0.22em] text-emerald-200/60">{homeTeam.shortName}</p>
+                <div className="mt-2 space-y-1">
+                  {homeEvents.length > 0 ? (
+                    homeEvents.map((event, idx) => (
+                      <div key={idx} className="flex items-baseline gap-2 text-sm text-white/80">
+                        <span className="shrink-0 font-mono text-[14px] text-emerald-300/70">
+                          {event.displayMinute}
+                        </span>
+                        <span>
+                          {event.playerName}
+                          {event.isPenalty && (
+                            <span className="ml-1 text-[10px] font-semibold text-amber-300/70">(P)</span>
+                          )}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-white/40">Không có bàn thắng</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Away scorers */}
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/60">{awayTeam.shortName}</p>
+                <div className="mt-2 space-y-1">
+                  {awayEvents.length > 0 ? (
+                    awayEvents.map((event, idx) => (
+                      <div key={idx} className="flex items-baseline gap-2 text-sm text-white/80">
+                        <span className="shrink-0 font-mono text-[14px] text-cyan-300/70">
+                          {event.displayMinute}
+                        </span>
+                        <span>
+                          {event.playerName}
+                          {event.isPenalty && (
+                            <span className="ml-1 text-[10px] font-semibold text-amber-300/70">(P)</span>
+                          )}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-white/40">Không có bàn thắng</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : isCompleted ? (
+        /* Fallback for matches without timeline (legacy data) */
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+            <p className="text-xs uppercase tracking-[0.22em] text-emerald-200/60">{homeTeam.shortName}</p>
+            <p className="mt-2 text-sm leading-6 text-white/80">
+              {match.scorers?.home.length
+                ? match.scorers.home.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
+                : 'Không có bàn thắng.'}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+            <p className="text-xs uppercase tracking-[0.22em] text-cyan-200/60">{awayTeam.shortName}</p>
+            <p className="mt-2 text-sm leading-6 text-white/80">
+              {match.scorers?.away.length
+                ? match.scorers.away.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
+                : 'Không có bàn thắng.'}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <button
         type="button"

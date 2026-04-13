@@ -1,7 +1,7 @@
 import type { PersistedTournamentState } from '../types/tournament';
 
-export const STORAGE_KEY = 'wc26-prediction-tool:v1';
-export const STORAGE_VERSION = 1;
+export const STORAGE_KEY = 'wc26-prediction-tool:v2';
+export const STORAGE_VERSION = 2;
 
 export const readPersistedTournament = (): PersistedTournamentState | null => {
   if (typeof window === 'undefined') {

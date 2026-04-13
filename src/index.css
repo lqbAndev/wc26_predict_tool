@@ -87,3 +87,8 @@ body::before {
   background: rgba(148, 163, 184, 0.36);
   background-clip: padding-box;
 }
+
+/* Timeline collapse transition */
+.timeline-collapse {
+  will-change: max-height, opacity;
+}

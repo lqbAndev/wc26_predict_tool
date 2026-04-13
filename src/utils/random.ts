@@ -5,6 +5,7 @@ import type {
   PenaltyShootout,
   PlayerProfile,
   Team,
+  TimelineEvent,
 } from '../types/tournament';
 
 const clamp = (value: number, minimum: number, maximum: number) =>
@@ -38,14 +39,23 @@ const weightedPick = <T,>(choices: Array<{ value: T; weight: number }>) => {
   return choices[choices.length - 1].value;
 };
 
+/**
+ * Expanded goal range 0–10 with realistic distribution.
+ * 0–3 goals ~90%, 4–6 ~8%, 7+ ~2% (very rare spectacle).
+ */
 const sampleBaseGoals = () =>
   weightedPick<number>([
-    { value: 0, weight: 25 },
+    { value: 0, weight: 24 },
     { value: 1, weight: 30 },
-    { value: 2, weight: 24 },
-    { value: 3, weight: 12 },
-    { value: 4, weight: 6 },
-    { value: 5, weight: 3 },
+    { value: 2, weight: 23 },
+    { value: 3, weight: 13 },
+    { value: 4, weight: 4.5 },
+    { value: 5, weight: 2.5 },
+    { value: 6, weight: 1.2 },
+    { value: 7, weight: 0.7 },
+    { value: 8, weight: 0.45 },
+    { value: 9, weight: 0.1 },
+    { value: 10, weight: 0.05 },
   ]);
 
 const applyRatingBias = (goals: number, ratingDifference: number) => {
@@ -66,7 +76,7 @@ const applyRatingBias = (goals: number, ratingDifference: number) => {
     adjusted -= 1;
   }
 
-  return clamp(adjusted, 0, 5);
+  return clamp(adjusted, 0, 10);
 };
 
 const generateScoreline = (homeTeam: Team, awayTeam: Team) => {
@@ -112,6 +122,69 @@ const GOAL_MINUTE_BUCKETS_EXTRA_TIME: GoalMinuteBucket[] = [
   { start: 101, end: 110, weight: 12 },
   { start: 111, end: 120, weight: 10 },
 ] as const;
+
+/* ═══════════════════ STOPPAGE TIME FORMATTING ═══════════════════ */
+
+/**
+ * Determines whether a minute falls in stoppage time and formats accordingly.
+ * - Minutes 45 → "45'"
+ * - Minutes 46-52 in first half context → "45+1'" to "45+7'"
+ * - Minutes 90 → "90'"
+ * - Minutes 91-97 in regulation context → "90+1'" to "90+7'"
+ * - ET: 105 → "105'", 106-112 → "105+1'" to "105+7'"
+ * - ET: 120 → "120'", 121-127 → "120+1'" to "120+7'"
+ *
+ * We handle this by checking normal vs stoppage ranges.
+ */
+interface MinuteInfo {
+  sortMinute: number;
+  displayMinute: string;
+}
+
+const STOPPAGE_CHANCE_FIRST_HALF = 0.12;
+const STOPPAGE_CHANCE_SECOND_HALF = 0.18;
+
+const formatMinuteForRegulation = (minute: number): MinuteInfo => {
+  // First half stoppage time (minute 46-52 → 45+1' to 45+7')
+  if (minute >= 46 && minute <= 52 && Math.random() < STOPPAGE_CHANCE_FIRST_HALF) {
+    const added = randomInt(1, 5);
+    return { sortMinute: 45 + added * 0.1, displayMinute: `45+${added}'` };
+  }
+
+  // Second half stoppage time (minute 91-97 → 90+1' to 90+7')
+  if (minute >= 86 && minute <= 90 && Math.random() < STOPPAGE_CHANCE_SECOND_HALF) {
+    const added = randomInt(1, 7);
+    return { sortMinute: 90 + added * 0.1, displayMinute: `90+${added}'` };
+  }
+
+  return { sortMinute: minute, displayMinute: `${minute}'` };
+};
+
+const formatMinuteForExtraTime = (minute: number): MinuteInfo => {
+  // ET first half stoppage (minute ~105 → 105+1' etc.)
+  if (minute >= 104 && minute <= 106 && Math.random() < 0.1) {
+    const added = randomInt(1, 3);
+    return { sortMinute: 105 + added * 0.1, displayMinute: `105+${added}'` };
+  }
+
+  // ET second half stoppage (minute ~119-120 → 120+1' etc.)
+  if (minute >= 118 && minute <= 120 && Math.random() < 0.15) {
+    const added = randomInt(1, 4);
+    return { sortMinute: 120 + added * 0.1, displayMinute: `120+${added}'` };
+  }
+
+  return { sortMinute: minute, displayMinute: `${minute}'` };
+};
+
+/* ═══════════════════ PENALTY (in-play) DETECTION ═══════════════════ */
+
+/**
+ * Random chance that a goal is scored via in-play penalty (not shootout).
+ * ~12% of goals are penalties in World Cup history.
+ */
+const isPenaltyGoal = (): boolean => Math.random() < 0.12;
+
+/* ═══════════════════ GOAL MINUTE GENERATION ═══════════════════ */
 
 const generateMatchGoalMinutes = (goalCount: number, buckets: GoalMinuteBucket[]) => {
   if (goalCount === 0) {
@@ -160,6 +233,10 @@ const allocateGoalMinutes = (
   return {
     homeMinutes,
     awayMinutes,
+    combinedTimeline: timeline.map((minute, index) => ({
+      minute,
+      side: sides[index],
+    })),
   };
 };
 
@@ -185,21 +262,205 @@ const generateScorersForTeam = (team: Team, minutes: number[]) => {
   });
 };
 
-const createScorers = (
+/* ═══════════════════ TIMELINE BUILDERS ═══════════════════ */
+
+const buildRegulationTimeline = (
   homeTeam: Team,
   awayTeam: Team,
   homeGoals: number,
   awayGoals: number,
-) => {
-  const { homeMinutes, awayMinutes } = allocateGoalMinutes(
+): { scorers: MatchScorers; timeline: TimelineEvent[] } => {
+  const { homeMinutes, awayMinutes, combinedTimeline } = allocateGoalMinutes(
     homeGoals,
     awayGoals,
     GOAL_MINUTE_BUCKETS_REGULATION,
   );
 
+  const homeScorers = generateScorersForTeam(homeTeam, homeMinutes);
+  const awayScorers = generateScorersForTeam(awayTeam, awayMinutes);
+
+  // Build scorers map for quick lookup by minute+side
+  const scorerLookup = new Map<string, { playerId: string; playerName: string; teamId: string }>();
+  for (const s of homeScorers) {
+    scorerLookup.set(`home-${s.minute}`, s);
+  }
+  for (const s of awayScorers) {
+    scorerLookup.set(`away-${s.minute}`, s);
+  }
+
+  const timeline: TimelineEvent[] = combinedTimeline.map(({ minute, side }) => {
+    const scorer = scorerLookup.get(`${side}-${minute}`)!;
+    const minuteInfo = formatMinuteForRegulation(minute);
+    const penalty = isPenaltyGoal();
+
+    return {
+      sortMinute: minuteInfo.sortMinute,
+      displayMinute: minuteInfo.displayMinute,
+      playerName: scorer.playerName,
+      playerId: scorer.playerId,
+      teamId: scorer.teamId,
+      side,
+      isPenalty: penalty,
+      phase: 'regulation' as const,
+    };
+  });
+
+  timeline.sort((a, b) => a.sortMinute - b.sortMinute);
+
   return {
-    home: generateScorersForTeam(homeTeam, homeMinutes),
-    away: generateScorersForTeam(awayTeam, awayMinutes),
+    scorers: { home: homeScorers, away: awayScorers },
+    timeline,
+  };
+};
+
+const buildKnockoutTimeline = (
+  homeTeam: Team,
+  awayTeam: Team,
+  regulationHomeGoals: number,
+  regulationAwayGoals: number,
+  extraTimeHomeGoals: number,
+  extraTimeAwayGoals: number,
+): { scorers: MatchScorers; timeline: TimelineEvent[] } => {
+  // Regulation portion
+  const regAlloc = allocateGoalMinutes(
+    regulationHomeGoals,
+    regulationAwayGoals,
+    GOAL_MINUTE_BUCKETS_REGULATION,
+  );
+
+  const regHomeScorers = generateScorersForTeam(homeTeam, regAlloc.homeMinutes);
+  const regAwayScorers = generateScorersForTeam(awayTeam, regAlloc.awayMinutes);
+
+  // Extra time portion
+  const etAlloc = allocateGoalMinutes(
+    extraTimeHomeGoals,
+    extraTimeAwayGoals,
+    GOAL_MINUTE_BUCKETS_EXTRA_TIME,
+  );
+
+  const etHomeScorers = generateScorersForTeam(homeTeam, etAlloc.homeMinutes);
+  const etAwayScorers = generateScorersForTeam(awayTeam, etAlloc.awayMinutes);
+
+  // Merge scorers
+  const homeScorers = [...regHomeScorers, ...etHomeScorers].sort((a, b) => a.minute - b.minute);
+  const awayScorers = [...regAwayScorers, ...etAwayScorers].sort((a, b) => a.minute - b.minute);
+
+  // Build regulation timeline events
+  const regLookup = new Map<string, { playerId: string; playerName: string; teamId: string }>();
+  for (const s of regHomeScorers) regLookup.set(`home-${s.minute}`, s);
+  for (const s of regAwayScorers) regLookup.set(`away-${s.minute}`, s);
+
+  const regTimeline: TimelineEvent[] = regAlloc.combinedTimeline.map(({ minute, side }) => {
+    const scorer = regLookup.get(`${side}-${minute}`)!;
+    const minuteInfo = formatMinuteForRegulation(minute);
+    return {
+      sortMinute: minuteInfo.sortMinute,
+      displayMinute: minuteInfo.displayMinute,
+      playerName: scorer.playerName,
+      playerId: scorer.playerId,
+      teamId: scorer.teamId,
+      side,
+      isPenalty: isPenaltyGoal(),
+      phase: 'regulation' as const,
+    };
+  });
+
+  // Build extra time timeline events
+  const etLookup = new Map<string, { playerId: string; playerName: string; teamId: string }>();
+  for (const s of etHomeScorers) etLookup.set(`home-${s.minute}`, s);
+  for (const s of etAwayScorers) etLookup.set(`away-${s.minute}`, s);
+
+  const etTimeline: TimelineEvent[] = etAlloc.combinedTimeline.map(({ minute, side }) => {
+    const scorer = etLookup.get(`${side}-${minute}`)!;
+    const minuteInfo = formatMinuteForExtraTime(minute);
+    return {
+      sortMinute: minuteInfo.sortMinute,
+      displayMinute: minuteInfo.displayMinute,
+      playerName: scorer.playerName,
+      playerId: scorer.playerId,
+      teamId: scorer.teamId,
+      side,
+      isPenalty: isPenaltyGoal(),
+      phase: 'extra-time' as const,
+    };
+  });
+
+  const allTimeline = [...regTimeline, ...etTimeline].sort((a, b) => a.sortMinute - b.sortMinute);
+
+  return {
+    scorers: { home: homeScorers, away: awayScorers },
+    timeline: allTimeline,
+  };
+};
+
+/* ═══════════════════ PUBLIC SIMULATORS ═══════════════════ */
+
+export const simulateGroupMatch = (match: GroupMatch, homeTeam: Team, awayTeam: Team): GroupMatch => {
+  const { homeGoals, awayGoals } = generateScoreline(homeTeam, awayTeam);
+  const { scorers, timeline } = buildRegulationTimeline(homeTeam, awayTeam, homeGoals, awayGoals);
+
+  return {
+    ...match,
+    homeScore: homeGoals,
+    awayScore: awayGoals,
+    scorers,
+    timeline,
+    status: 'completed',
+    predictedAt: new Date().toISOString(),
+  };
+};
+
+export const simulateKnockoutRegulation = (
+  match: KnockoutMatch,
+  homeTeam: Team,
+  awayTeam: Team,
+): KnockoutMatch => {
+  const regulation = generateScoreline(homeTeam, awayTeam);
+  let extraTimeHomeGoals = 0;
+  let extraTimeAwayGoals = 0;
+  let extraTimeHomeScore: number | null = null;
+  let extraTimeAwayScore: number | null = null;
+
+  if (regulation.homeGoals === regulation.awayGoals) {
+    const extraTime = generateExtraTimeScoreline(homeTeam, awayTeam);
+    extraTimeHomeGoals = extraTime.homeGoals;
+    extraTimeAwayGoals = extraTime.awayGoals;
+    extraTimeHomeScore = regulation.homeGoals + extraTimeHomeGoals;
+    extraTimeAwayScore = regulation.awayGoals + extraTimeAwayGoals;
+  }
+
+  const finalHomeScore =
+    extraTimeHomeScore !== null ? extraTimeHomeScore : regulation.homeGoals;
+  const finalAwayScore =
+    extraTimeAwayScore !== null ? extraTimeAwayScore : regulation.awayGoals;
+
+  const { scorers, timeline } = buildKnockoutTimeline(
+    homeTeam,
+    awayTeam,
+    regulation.homeGoals,
+    regulation.awayGoals,
+    extraTimeHomeGoals,
+    extraTimeAwayGoals,
+  );
+
+  const isDrawAfter120 = finalHomeScore === finalAwayScore;
+  const winnerTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? homeTeam.id : awayTeam.id;
+  const loserTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? awayTeam.id : homeTeam.id;
+
+  return {
+    ...match,
+    regulationHomeScore: regulation.homeGoals,
+    regulationAwayScore: regulation.awayGoals,
+    extraTimeHomeScore,
+    extraTimeAwayScore,
+    homeScore: finalHomeScore,
+    awayScore: finalAwayScore,
+    scorers,
+    timeline,
+    status: isDrawAfter120 ? 'awaiting-penalties' : 'completed',
+    winnerTeamId,
+    loserTeamId,
+    predictedAt: new Date().toISOString(),
   };
 };
 
@@ -229,103 +490,6 @@ const generateExtraTimeScoreline = (homeTeam: Team, awayTeam: Team) => ({
   homeGoals: applyExtraTimeBias(sampleExtraTimeBaseGoals(), homeTeam.rating - awayTeam.rating),
   awayGoals: applyExtraTimeBias(sampleExtraTimeBaseGoals(), awayTeam.rating - homeTeam.rating),
 });
-
-const createKnockoutScorers = (
-  homeTeam: Team,
-  awayTeam: Team,
-  regulationHomeGoals: number,
-  regulationAwayGoals: number,
-  extraTimeHomeGoals: number,
-  extraTimeAwayGoals: number,
-): MatchScorers => {
-  const regulationMinutes = allocateGoalMinutes(
-    regulationHomeGoals,
-    regulationAwayGoals,
-    GOAL_MINUTE_BUCKETS_REGULATION,
-  );
-
-  const extraMinutes = allocateGoalMinutes(
-    extraTimeHomeGoals,
-    extraTimeAwayGoals,
-    GOAL_MINUTE_BUCKETS_EXTRA_TIME,
-  );
-
-  const homeMinutes = [...regulationMinutes.homeMinutes, ...extraMinutes.homeMinutes].sort(
-    (left, right) => left - right,
-  );
-  const awayMinutes = [...regulationMinutes.awayMinutes, ...extraMinutes.awayMinutes].sort(
-    (left, right) => left - right,
-  );
-
-  return {
-    home: generateScorersForTeam(homeTeam, homeMinutes),
-    away: generateScorersForTeam(awayTeam, awayMinutes),
-  };
-};
-
-export const simulateGroupMatch = (match: GroupMatch, homeTeam: Team, awayTeam: Team): GroupMatch => {
-  const { homeGoals, awayGoals } = generateScoreline(homeTeam, awayTeam);
-
-  return {
-    ...match,
-    homeScore: homeGoals,
-    awayScore: awayGoals,
-    scorers: createScorers(homeTeam, awayTeam, homeGoals, awayGoals),
-    status: 'completed',
-    predictedAt: new Date().toISOString(),
-  };
-};
-
-export const simulateKnockoutRegulation = (
-  match: KnockoutMatch,
-  homeTeam: Team,
-  awayTeam: Team,
-): KnockoutMatch => {
-  const regulation = generateScoreline(homeTeam, awayTeam);
-  let extraTimeHomeGoals = 0;
-  let extraTimeAwayGoals = 0;
-  let extraTimeHomeScore: number | null = null;
-  let extraTimeAwayScore: number | null = null;
-
-  if (regulation.homeGoals === regulation.awayGoals) {
-    const extraTime = generateExtraTimeScoreline(homeTeam, awayTeam);
-    extraTimeHomeGoals = extraTime.homeGoals;
-    extraTimeAwayGoals = extraTime.awayGoals;
-    extraTimeHomeScore = regulation.homeGoals + extraTimeHomeGoals;
-    extraTimeAwayScore = regulation.awayGoals + extraTimeAwayGoals;
-  }
-
-  const finalHomeScore =
-    extraTimeHomeScore !== null ? extraTimeHomeScore : regulation.homeGoals;
-  const finalAwayScore =
-    extraTimeAwayScore !== null ? extraTimeAwayScore : regulation.awayGoals;
-  const scorers = createKnockoutScorers(
-    homeTeam,
-    awayTeam,
-    regulation.homeGoals,
-    regulation.awayGoals,
-    extraTimeHomeGoals,
-    extraTimeAwayGoals,
-  );
-  const isDrawAfter120 = finalHomeScore === finalAwayScore;
-  const winnerTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? homeTeam.id : awayTeam.id;
-  const loserTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? awayTeam.id : homeTeam.id;
-
-  return {
-    ...match,
-    regulationHomeScore: regulation.homeGoals,
-    regulationAwayScore: regulation.awayGoals,
-    extraTimeHomeScore,
-    extraTimeAwayScore,
-    homeScore: finalHomeScore,
-    awayScore: finalAwayScore,
-    scorers,
-    status: isDrawAfter120 ? 'awaiting-penalties' : 'completed',
-    winnerTeamId,
-    loserTeamId,
-    predictedAt: new Date().toISOString(),
-  };
-};
 
 export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): PenaltyShootout => {
   const getKickConversionRate = (team: Team, opponent: Team) =>

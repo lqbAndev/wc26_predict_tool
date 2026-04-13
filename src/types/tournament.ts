@@ -41,6 +41,33 @@ export interface MatchScorers {
   away: GoalEvent[];
 }
 
+/** A single event in the match timeline, sorted chronologically */
+export interface TimelineEvent {
+  /** Actual minute for sorting (e.g. 45 for 45', 46 for 45+1', 91 for 90+1') */
+  sortMinute: number;
+  /** Display string such as "23'", "45+2'", "90+1'" */
+  displayMinute: string;
+  /** Player who scored */
+  playerName: string;
+  playerId: string;
+  /** Team that scored */
+  teamId: string;
+  /** 'home' or 'away' */
+  side: 'home' | 'away';
+  /** Whether this goal was from a penalty kick during play (not shootout) */
+  isPenalty: boolean;
+  /** Phase: 'regulation' | 'extra-time' */
+  phase: 'regulation' | 'extra-time';
+}
+
+/** Penalty shootout detail for each kick */
+export interface PenaltyShootoutKick {
+  teamId: string;
+  playerName: string;
+  scored: boolean;
+  side: 'home' | 'away';
+}
+
 export interface GroupMatch {
   id: string;
   stage: 'group';
@@ -51,6 +78,7 @@ export interface GroupMatch {
   homeScore: number | null;
   awayScore: number | null;
   scorers: MatchScorers | null;
+  timeline: TimelineEvent[] | null;
   status: 'pending' | 'completed';
   predictedAt: string | null;
 }
@@ -83,6 +111,7 @@ export interface KnockoutMatch {
   homeScore: number | null;
   awayScore: number | null;
   scorers: MatchScorers | null;
+  timeline: TimelineEvent[] | null;
   penalty: PenaltyShootout | null;
   status: KnockoutMatchStatus;
   winnerTeamId: string | null;
