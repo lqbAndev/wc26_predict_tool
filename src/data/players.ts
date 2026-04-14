@@ -81,7 +81,7 @@ const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
     ['Yassine Bounou'],
     ['Achraf Hakimi', 'Nayef Aguerd', 'Romain Saiss', 'Noussair Mazraoui'],
     ['Sofyan Amrabat', 'Azzedine Ounahi', 'Selim Amallah', 'Bilal El Khannouss', 'Amine Adli'],
-    ['Hakim Ziyech', 'Youssef En-Nesyri', 'Sofiane Boufal', 'Ibrahim Diaz', 'Abde Ezzalzouli'],
+    ['Hakim Ziyech', 'Youssef En-Nesyri', 'Sofiane Boufal', 'Brahim Diaz', 'Abde Ezzalzouli'],
   ),
   'Haiti': makeTeam(
     ['Johny Placide'],
@@ -122,8 +122,8 @@ const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
   'Germany': makeTeam(
     ['Manuel Neuer'],
     ['Joshua Kimmich', 'Jonathan Tah', 'Antonio Rudiger', 'Maximilian Mittelstadt'],
-    ['Robert Andrich', 'Toni Kroos', 'Ilkay Gundogan', 'Leon Goretzka', 'Chris Fuehrich', 'Leroy Sane'],
-    ['Jamal Musiala', 'Florian Wirtz', 'Kai Havertz', 'Niclas Fuellkrug', 'Serge Gnabry'],
+    ['Robert Andrich', 'Ilkay Gundogan', 'Leon Goretzka', 'Chris Fuehrich', 'Lennart Karl'],
+    ['Jamal Musiala', 'Florian Wirtz', 'Kai Havertz', 'Niclas Fuellkrug', 'Serge Gnabry', 'Nick Woltemade'],
   ),
   'Curacao': makeTeam(
     ['Eloy Room'],
@@ -170,7 +170,7 @@ const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
   'Belgium': makeTeam(
     ['Koen Casteels'],
     ['Timothy Castagne', 'Wout Faes', 'Jan Vertonghen', 'Arthur Theate'],
-    ['Amadou Onana', 'Youri Tielemans', 'Kevin De Bruyne', 'Charles De Ketelaere', 'Orel Mangala', 'Aster Vranckx'],
+    ['Amadou Onana', 'Youri Tielemans', 'Charles De Ketelaere', 'Orel Mangala', 'Aster Vranckx'],
     ['Jeremy Doku', 'Leandro Trossard', 'Romelu Lukaku', 'Lois Openda', 'Johan Bakayoko'],
   ),
   'Egypt': makeTeam(
@@ -213,13 +213,13 @@ const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
     ['Sergio Rochet'],
     ['Nahitan Nandez', 'Ronald Araujo', 'Jose Gimenez', 'Mathias Olivera'],
     ['Manuel Ugarte', 'Federico Valverde', 'Nicolas De La Cruz', 'Rodrigo Bentancur', 'Giorgian De Arrascaeta'],
-    ['Facundo Pellistri', 'Darwin Nunez', 'Maximiliano Araujo', 'Luis Suarez', 'Agustin Canobbio'],
+    ['Facundo Pellistri', 'Darwin Nunez', 'Maximiliano Araujo', 'Agustin Canobbio'],
   ),
   'France': makeTeam(
     ['Mike Maignan'],
     ['Jules Kounde', 'Dayot Upamecano', 'William Saliba', 'Theo Hernandez'],
     ['N\'Golo Kante', 'Aurelien Tchouameni', 'Adrien Rabiot', 'Eduardo Camavinga', 'Antoine Griezmann', 'Youssouf Fofana'],
-    ['Ousmane Dembele', 'Kylian Mbappe', 'Marcus Thuram', 'Randal Kolo Muani', 'Olivier Giroud'],
+    ['Ousmane Dembele', 'Kylian Mbappe', 'Marcus Thuram', 'Randal Kolo Muani', 'Michael Olise'],
   ),
   'Senegal': makeTeam(
     ['Edouard Mendy'],
@@ -243,7 +243,7 @@ const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
     ['Emiliano Martinez'],
     ['Nahuel Molina', 'Cristian Romero', 'Lisandro Martinez', 'Nicolas Tagliafico'],
     ['Rodrigo De Paul', 'Enzo Fernandez', 'Alexis Mac Allister', 'Exequiel Palacios', 'Leandro Paredes', 'Giovani Lo Celso'],
-    ['Angel Di Maria', 'Lionel Messi', 'Julian Alvarez', 'Lautaro Martinez', 'Nicolas Gonzalez'],
+    ['Angel Di Maria', 'Lionel Messi', 'Julian Alvarez', 'Lautaro Martinez', 'Alejandro Garnacho'],
   ),
   'Algeria': makeTeam(
     ['Anthony Mandrea'],
@@ -267,7 +267,7 @@ const REAL_TEAM_ROSTERS: Record<string, BasePlayer[]> = {
     ['Diogo Costa'],
     ['Joao Cancelo', 'Ruben Dias', 'Pepe', 'Nuno Mendes'],
     ['Joao Palhinha', 'Vitinha', 'Bruno Fernandes', 'Bernardo Silva', 'Joao Neves', 'Otavio'],
-    ['Rafael Leao', 'Cristiano Ronaldo', 'Goncalo Ramos', 'Diogo Jota', 'Pedro Neto'],
+    ['Rafael Leao', 'Cristiano Ronaldo', 'Goncalo Ramos', 'Pedro Neto'],
   ),
   'DR Congo': makeTeam(
     ['Lionel Mpasi'],

@@ -8,9 +8,10 @@ interface ChampionModalProps {
   championName: string | null;
   isOpen: boolean;
   onClose: () => void;
+  onViewRecap?: () => void;
 }
 
-export const ChampionModal = ({ championName, isOpen, onClose }: ChampionModalProps) => {
+export const ChampionModal = ({ championName, isOpen, onClose, onViewRecap }: ChampionModalProps) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
@@ -21,6 +22,11 @@ export const ChampionModal = ({ championName, isOpen, onClose }: ChampionModalPr
   }, [isOpen]);
 
   if (!isOpen || !championName) return null;
+
+  const handleViewRecap = () => {
+    onClose();
+    onViewRecap?.();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -65,10 +71,10 @@ export const ChampionModal = ({ championName, isOpen, onClose }: ChampionModalPr
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleViewRecap}
             className="mt-8 w-full rounded-2xl border border-host-mexico/35 bg-host-mexico/18 px-5 py-4 text-sm font-bold text-host-ice transition hover:scale-[1.02] hover:bg-host-mexico/24"
           >
-            Đóng và xem kết quả giải đấu
+            Đóng và xem Recap giải đấu
           </button>
         </div>
       </div>
