@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { CalendarDays, Orbit, RotateCcw, Swords, Users } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarDays, Orbit, RotateCcw, Swords, Trophy, Users } from 'lucide-react';
 import { BestThirdTable } from './components/BestThirdTable';
 import { ChampionCup, TriondaBall, WorldCupLogo } from './components/BrandAssets';
 import { ChampionModal } from './components/ChampionModal';
@@ -9,8 +9,10 @@ import { HeroBranding } from './components/HeroBranding';
 import { KnockoutBracket } from './components/KnockoutBracket';
 import { ResetModal } from './components/ResetModal';
 import { TopScorersTable } from './components/TopScorersTable';
+import { TournamentRecap } from './components/TournamentRecap';
 import { GROUPS } from './data/tournament';
 import { useTournament } from './hooks/useTournament';
+import { calculateTournamentStats } from './utils/recapStats';
 
 const SLOGAN = 'WE ARE 26';
 
@@ -49,9 +51,18 @@ function App() {
     derivedState.thirdPlaceTable.filter((entry) => entry.qualifies).map((entry) => entry.teamId),
   );
 
+  const recapStats = useMemo(
+    () => calculateTournamentStats(coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers),
+    [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers],
+  );
+
   const handleOpenKnockout = () => {
     openKnockoutStage();
     setTimeout(() => scrollToId('knockout'), 120);
+  };
+
+  const handleViewRecap = () => {
+    setTimeout(() => scrollToId('recap'), 200);
   };
 
   const confirmReset = () => {
@@ -113,6 +124,16 @@ function App() {
                   >
                     Knock-out Stage
                   </button>
+
+                  {recapStats.isComplete && (
+                    <button
+                      type="button"
+                      onClick={handleViewRecap}
+                      className="flex items-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/12 px-5 py-3 text-sm font-semibold text-amber-200 transition hover:-translate-y-0.5 hover:bg-amber-400/20"
+                    >
+                      <Trophy className="h-4 w-4" /> Recap WC26
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -268,6 +289,12 @@ function App() {
               )}
             </div>
           </section>
+
+          <section id="recap" className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1640px]">
+              <TournamentRecap stats={recapStats} />
+            </div>
+          </section>
         </main>
       </div>
 
@@ -277,6 +304,7 @@ function App() {
         isOpen={showChampionModal}
         championName={derivedState.championName}
         onClose={() => setShowChampionModal(false)}
+        onViewRecap={handleViewRecap}
       />
     </div>
   );
