@@ -68,6 +68,25 @@ export interface PenaltyShootoutKick {
   side: 'home' | 'away';
 }
 
+export type MatchMOTMReason =
+  | 'top-goals'
+  | 'decisive-goal'
+  | 'winner-priority'
+  | 'controlled-random';
+
+export interface MatchMOTM {
+  playerName: string;
+  teamName: string;
+  reason: MatchMOTMReason;
+}
+
+export interface SeasonMOTM {
+  playerName: string;
+  teamName: string;
+  motmCount: number;
+  motmScore: number;
+}
+
 export interface GroupMatch {
   id: string;
   stage: 'group';
@@ -79,6 +98,7 @@ export interface GroupMatch {
   awayScore: number | null;
   scorers: MatchScorers | null;
   timeline: TimelineEvent[] | null;
+  motm: MatchMOTM | null;
   status: 'pending' | 'completed';
   predictedAt: string | null;
 }
@@ -112,6 +132,7 @@ export interface KnockoutMatch {
   awayScore: number | null;
   scorers: MatchScorers | null;
   timeline: TimelineEvent[] | null;
+  motm: MatchMOTM | null;
   penalty: PenaltyShootout | null;
   status: KnockoutMatchStatus;
   winnerTeamId: string | null;
@@ -164,6 +185,7 @@ export interface TournamentDerivedState {
   standingsByGroup: Record<GroupId, TeamStanding[]>;
   thirdPlaceTable: ThirdPlaceStanding[];
   topScorers: TopScorerEntry[];
+  seasonMOTM: SeasonMOTM | null;
   qualifiedTeamIds: string[];
   groupStageComplete: boolean;
   knockoutReady: boolean;

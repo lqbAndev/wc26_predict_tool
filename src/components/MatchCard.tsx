@@ -56,6 +56,15 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
         </div>
       </div>
 
+      {isCompleted && match.motm ? (
+        <div className="mt-3 flex items-center gap-2 rounded-2xl border border-host-mexico/18 bg-host-mexico/10 px-3 py-2">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-white/55">MOTM:</span>
+          <Flag teamName={match.motm.teamName} size={16} />
+          <span className="text-white/45">-</span>
+          <span className="text-sm font-bold text-host-ice">{match.motm.playerName}</span>
+        </div>
+      ) : null}
+
       {/* Expandable Scorers */}
       {isCompleted && hasTimeline ? (
         <div className="mt-3">

@@ -208,6 +208,15 @@ export const KnockoutMatchCard = ({
         </div>
       ) : null}
 
+      {isCompleted && match.motm ? (
+        <div className="mt-2 flex items-center gap-2 rounded-[14px] border border-host-mexico/20 bg-host-mexico/10 px-3 py-2">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-host-ice/62">MOTM:</span>
+          <Flag teamName={match.motm.teamName} size={16} />
+          <span className="text-host-ice/45">-</span>
+          <span className="text-sm font-bold text-host-ice">{match.motm.playerName}</span>
+        </div>
+      ) : null}
+
       {/* Expandable Scorers for knockout */}
       {(isCompleted || waitingPenalty) && (hasTimeline || match.penalty) ? (
         <div className="mt-2">
