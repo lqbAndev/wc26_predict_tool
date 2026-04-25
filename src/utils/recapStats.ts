@@ -3,6 +3,7 @@ import type {
   GroupMatch,
   KnockoutMatch,
   KnockoutRound,
+  SeasonMOTM,
   TopScorerEntry,
 } from '../types/tournament';
 
@@ -37,6 +38,8 @@ export interface TournamentRecapStats {
   thirdPlace: string;
   /** Top scorer entry */
   topScorer: TopScorerEntry | null;
+  /** Player with best MOTM performance across the tournament */
+  seasonMOTM: SeasonMOTM | null;
   /** Total goals across the entire tournament */
   totalGoals: number;
   /** Total matches played */
@@ -127,6 +130,7 @@ export const calculateTournamentStats = (
   groupMatches: GroupMatch[],
   knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>,
   topScorers: TopScorerEntry[],
+  seasonMOTM: SeasonMOTM | null,
 ): TournamentRecapStats => {
   const allKnockout = Object.values(knockoutMatches).flat();
   const isComplete = isTournamentComplete(knockoutMatches);
@@ -265,6 +269,7 @@ export const calculateTournamentStats = (
     runnerUp,
     thirdPlace,
     topScorer,
+    seasonMOTM,
     totalGoals,
     totalMatches,
     totalPenaltyMatches,

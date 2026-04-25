@@ -30,6 +30,7 @@ import {
   buildKnockoutSeeds,
   buildKnockoutTeamOrigins,
 } from '../utils/knockout';
+import { buildSeasonMOTM, computeMatchMOTM } from '../utils/motm';
 import { simulateGroupMatch, simulateKnockoutRegulation, simulatePenaltyShootout } from '../utils/random';
 import { buildTopScorers } from '../utils/topScorers';
 
@@ -46,12 +47,14 @@ const deriveTournamentState = (core: TournamentCoreState): TournamentDerivedStat
   const knockoutTeamOrigins = knockoutReady ? buildKnockoutTeamOrigins(knockoutSeeds) : {};
   const qualifiedTeamIds = knockoutReady ? getQualifiedTeamIds(standingsByGroup, thirdPlaceTable) : [];
   const topScorers = buildTopScorers(core.groupMatches, core.knockoutMatches);
+  const seasonMOTM = buildSeasonMOTM(core.groupMatches, core.knockoutMatches);
   const championTeamId = core.knockoutMatches.final[0]?.winnerTeamId ?? null;
 
   return {
     standingsByGroup,
     thirdPlaceTable,
     topScorers,
+    seasonMOTM,
     qualifiedTeamIds,
     groupStageComplete,
     knockoutReady,
@@ -101,6 +104,7 @@ export const useTournament = () => {
         standingsByGroup: derivedState.standingsByGroup,
         thirdPlaceTable: derivedState.thirdPlaceTable,
         topScorers: derivedState.topScorers,
+        seasonMOTM: derivedState.seasonMOTM,
         qualifiedTeamIds: derivedState.qualifiedTeamIds,
         groupStageComplete: derivedState.groupStageComplete,
         knockoutReady: derivedState.knockoutReady,
@@ -212,12 +216,17 @@ export const useTournament = () => {
       );
       const winnerTeamId = penalty.home > penalty.away ? targetMatch.homeTeamId : targetMatch.awayTeamId;
       const loserTeamId = winnerTeamId === targetMatch.homeTeamId ? targetMatch.awayTeamId : targetMatch.homeTeamId;
-      const updatedMatch = {
+      const completedMatch: typeof targetMatch = {
         ...targetMatch,
         penalty,
+        motm: null,
         status: 'completed' as const,
         winnerTeamId,
         loserTeamId,
+      };
+      const updatedMatch: typeof targetMatch = {
+        ...completedMatch,
+        motm: computeMatchMOTM(completedMatch),
       };
 
       let nextKnockoutState: TournamentCoreState['knockoutMatches'] = {
@@ -229,8 +238,8 @@ export const useTournament = () => {
         nextKnockoutState,
         round,
         updatedMatch.slot,
-        updatedMatch.winnerTeamId,
-        updatedMatch.loserTeamId,
+        winnerTeamId,
+        loserTeamId,
       );
 
       return {

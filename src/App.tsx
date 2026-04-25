@@ -52,8 +52,14 @@ function App() {
   );
 
   const recapStats = useMemo(
-    () => calculateTournamentStats(coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers),
-    [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers],
+    () =>
+      calculateTournamentStats(
+        coreState.groupMatches,
+        coreState.knockoutMatches,
+        derivedState.topScorers,
+        derivedState.seasonMOTM,
+      ),
+    [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers, derivedState.seasonMOTM],
   );
 
   const handleOpenKnockout = () => {

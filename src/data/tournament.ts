@@ -201,6 +201,7 @@ export const createInitialGroupMatches = (): GroupMatch[] =>
       awayScore: null,
       scorers: null,
       timeline: null,
+      motm: null,
       status: 'pending' as const,
       predictedAt: null,
     })),
@@ -251,6 +252,7 @@ export const normalizeGroupMatches = (incomingMatches?: GroupMatch[]): GroupMatc
         awayScore: persistedMatch.awayScore,
         scorers: persistedMatch.scorers,
         timeline: persistedMatch.timeline ?? null,
+        motm: persistedMatch.motm ?? null,
         status: persistedMatch.status,
         predictedAt: persistedMatch.predictedAt,
       };
@@ -265,6 +267,7 @@ export const normalizeGroupMatches = (incomingMatches?: GroupMatch[]): GroupMatc
         timeline: persistedMatch.timeline
           ? persistedMatch.timeline.map((e) => ({ ...e, side: e.side === 'home' ? 'away' as const : 'home' as const }))
           : null,
+        motm: persistedMatch.motm ?? null,
         status: persistedMatch.status,
         predictedAt: persistedMatch.predictedAt,
       };
@@ -329,6 +332,7 @@ const createEmptyKnockoutMatch = (round: KnockoutRound, slot: number): KnockoutM
     awayScore: null,
     scorers: null,
     timeline: null,
+    motm: null,
     penalty: null,
     status: 'pending',
     winnerTeamId: null,

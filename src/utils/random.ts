@@ -7,6 +7,7 @@ import type {
   Team,
   TimelineEvent,
 } from '../types/tournament';
+import { computeMatchMOTM } from './motm';
 
 const clamp = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -399,7 +400,7 @@ export const simulateGroupMatch = (match: GroupMatch, homeTeam: Team, awayTeam: 
   const { homeGoals, awayGoals } = generateScoreline(homeTeam, awayTeam);
   const { scorers, timeline } = buildRegulationTimeline(homeTeam, awayTeam, homeGoals, awayGoals);
 
-  return {
+  const completedMatch: GroupMatch = {
     ...match,
     homeScore: homeGoals,
     awayScore: awayGoals,
@@ -407,6 +408,12 @@ export const simulateGroupMatch = (match: GroupMatch, homeTeam: Team, awayTeam: 
     timeline,
     status: 'completed',
     predictedAt: new Date().toISOString(),
+    motm: null,
+  };
+
+  return {
+    ...completedMatch,
+    motm: computeMatchMOTM(completedMatch),
   };
 };
 
@@ -447,7 +454,7 @@ export const simulateKnockoutRegulation = (
   const winnerTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? homeTeam.id : awayTeam.id;
   const loserTeamId = isDrawAfter120 ? null : finalHomeScore > finalAwayScore ? awayTeam.id : homeTeam.id;
 
-  return {
+  const nextMatch: KnockoutMatch = {
     ...match,
     regulationHomeScore: regulation.homeGoals,
     regulationAwayScore: regulation.awayGoals,
@@ -457,10 +464,16 @@ export const simulateKnockoutRegulation = (
     awayScore: finalAwayScore,
     scorers,
     timeline,
+    motm: null,
     status: isDrawAfter120 ? 'awaiting-penalties' : 'completed',
     winnerTeamId,
     loserTeamId,
     predictedAt: new Date().toISOString(),
+  };
+
+  return {
+    ...nextMatch,
+    motm: nextMatch.status === 'completed' ? computeMatchMOTM(nextMatch) : null,
   };
 };
 
