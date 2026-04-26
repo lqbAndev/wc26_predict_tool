@@ -66,7 +66,7 @@ const StatCard = ({
   );
 };
 
-const SeasonMOTMCard = ({
+const SeasonMOTSCard = ({
   playerName,
   teamName,
   motmCount,
@@ -77,10 +77,9 @@ const SeasonMOTMCard = ({
 }) => (
   <div className="rounded-[28px] border border-host-mexico/24 bg-host-mexico/12 p-5 transition hover:scale-[1.02]">
     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-host-ice/55">
-      <Award className="h-4 w-4" /> Season MOTM
+      <Award className="h-4 w-4" /> MOTS (Man of the Season)
     </div>
     <div className="mt-3 flex items-center gap-2.5">
-      <span className="text-base text-host-mexico">👉</span>
       <Flag teamName={teamName} size={28} />
       <span className="truncate text-2xl font-black text-white">{playerName}</span>
     </div>
@@ -304,7 +303,7 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
           flagTeam={stats.topScorer?.teamName}
         />
         {stats.seasonMOTM ? (
-          <SeasonMOTMCard
+          <SeasonMOTSCard
             playerName={stats.seasonMOTM.playerName}
             teamName={stats.seasonMOTM.teamName}
             motmCount={stats.seasonMOTM.motmCount}
@@ -312,7 +311,7 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
         ) : (
           <div className="rounded-[28px] border border-host-mexico/18 bg-host-mexico/8 p-5">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-host-ice/55">
-              <Award className="h-4 w-4" /> Season MOTM
+              <Award className="h-4 w-4" /> MOTS (Man of the Season)
             </div>
             <div className="mt-3 text-2xl font-black text-white/45">--</div>
             <div className="mt-2 text-sm text-white/55">Hoàn tất giải đấu để xác định.</div>
