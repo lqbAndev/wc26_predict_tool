@@ -101,7 +101,6 @@ export const calculateTournamentStats = (
   groupMatches: GroupMatch[],
   knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>,
   topScorers: TopScorerEntry[],
-  seasonMOTM: SeasonMOTM | null,
 ): TournamentRecapStats => {
   const allKnockoutMatches = Object.values(knockoutMatches).flat();
   const completedGroupMatches = groupMatches.filter((match) => match.status === 'completed');
@@ -222,6 +221,17 @@ export const calculateTournamentStats = (
 
   const goalsPerMatch = totalMatches > 0 ? Number((totalGoals / totalMatches).toFixed(2)) : 0;
   const bestXI = isComplete ? buildBestXI(groupMatches, knockoutMatches) : null;
+
+  // MOTS = Best Player from Best XI of the Tournament
+  let seasonMOTM: SeasonMOTM | null = null;
+  if (bestXI?.bestPlayer) {
+    seasonMOTM = {
+      playerName: bestXI.bestPlayer.playerName,
+      teamName: bestXI.bestPlayer.teamName,
+      motmCount: bestXI.bestPlayer.motmCount,
+      motmScore: bestXI.bestPlayer.totalScore,
+    };
+  }
 
   return {
     champion,

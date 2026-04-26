@@ -86,7 +86,9 @@ const SeasonMOTSCard = ({
       <span className="truncate text-2xl font-black text-white">{playerName}</span>
     </div>
     <div className="mt-2 text-sm text-white/70">{teamName}</div>
-    <div className="mt-1 text-sm text-host-ice/75">{motmCount} MOTM awards</div>
+    {motmCount > 0 && (
+      <div className="mt-0.5 text-xs text-white/45">{motmCount} MOTM award{motmCount !== 1 ? 's' : ''} throughout tournament</div>
+    )}
   </div>
 );
 
@@ -98,11 +100,10 @@ const BestXIPlayerCard = ({
   isBestPlayer: boolean;
 }) => (
   <article
-    className={`rounded-2xl border px-2 py-2 text-center transition ${
-      isBestPlayer
+    className={`rounded-2xl border px-2 py-2 text-center transition ${isBestPlayer
         ? 'border-amber-300/45 bg-amber-400/12 shadow-[0_0_22px_rgba(245,158,11,0.22)]'
         : 'border-white/12 bg-white/[0.04]'
-    }`}
+      }`}
   >
     <div className="flex items-center justify-center gap-1.5">
       <Flag teamName={player.teamName} size={16} />
@@ -213,17 +214,15 @@ const FeaturedMatchCard = ({
   icon?: typeof Trophy;
 }) => (
   <div
-    className={`rounded-[28px] border p-5 transition hover:scale-[1.01] ${
-      featured
+    className={`rounded-[28px] border p-5 transition hover:scale-[1.01] ${featured
         ? 'border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-host-mexico/10 to-host-mexico/[0.03] shadow-[0_0_24px_rgba(245,158,11,0.08)] sm:p-6'
         : 'border-white/10 bg-white/[0.04]'
-    }`}
+      }`}
   >
     <div className="flex items-center justify-between">
       <div
-        className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${
-          featured ? 'text-amber-400/90' : 'text-host-ice/50'
-        }`}
+        className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] ${featured ? 'text-amber-400/90' : 'text-host-ice/50'
+          }`}
       >
         <Icon className="h-3.5 w-3.5" />
         {title}
@@ -360,10 +359,10 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
 
   const dramaticMatch =
     stats.mostDramaticMatch &&
-    !(
-      stats.mostDramaticMatch.homeTeamName === stats.highestScoringMatch?.homeTeamName &&
-      stats.mostDramaticMatch.awayTeamName === stats.highestScoringMatch?.awayTeamName
-    )
+      !(
+        stats.mostDramaticMatch.homeTeamName === stats.highestScoringMatch?.homeTeamName &&
+        stats.mostDramaticMatch.awayTeamName === stats.highestScoringMatch?.awayTeamName
+      )
       ? stats.mostDramaticMatch
       : null;
 
