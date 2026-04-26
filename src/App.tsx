@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, Orbit, RotateCcw, Swords, Trophy, Users } from 'lucide-react';
+import { CalendarDays, GitCompareArrows, Orbit, RotateCcw, Swords, Trophy, Users } from 'lucide-react';
+import { BackToTopButton } from './components/BackToTopButton';
 import { BestThirdTable } from './components/BestThirdTable';
 import { ChampionCup, TriondaBall, WorldCupLogo } from './components/BrandAssets';
 import { ChampionModal } from './components/ChampionModal';
 import { Flag } from './components/Flag';
 import { GroupCard } from './components/GroupCard';
+import { HeadToHeadModal } from './components/HeadToHeadModal';
 import { HeroBranding } from './components/HeroBranding';
 import { KnockoutBracket } from './components/KnockoutBracket';
 import { ResetModal } from './components/ResetModal';
 import { TopScorersTable } from './components/TopScorersTable';
 import { TournamentRecap } from './components/TournamentRecap';
-import { GROUPS } from './data/tournament';
+import { GROUPS, TEAMS } from './data/tournament';
 import { useTournament } from './hooks/useTournament';
+import { buildTeamCompareStatsMap } from './utils/headToHead';
 import { calculateTournamentStats } from './utils/recapStats';
 
 const SLOGAN = 'WE ARE 26';
@@ -33,6 +36,10 @@ function App() {
 
   const [showResetModal, setShowResetModal] = useState(false);
   const [showChampionModal, setShowChampionModal] = useState(false);
+  const [showHeadToHeadModal, setShowHeadToHeadModal] = useState(false);
+  const [compareTeamAId, setCompareTeamAId] = useState('');
+  const [compareTeamBId, setCompareTeamBId] = useState('');
+  const [compareRequested, setCompareRequested] = useState(false);
   const prevChampionRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -62,6 +69,26 @@ function App() {
     [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers, derivedState.seasonMOTM],
   );
 
+  const compareStatsMap = useMemo(
+    () => buildTeamCompareStatsMap(TEAMS, coreState.groupMatches, coreState.knockoutMatches),
+    [coreState.groupMatches, coreState.knockoutMatches],
+  );
+
+  const compareResult = useMemo(() => {
+    if (!compareRequested || !compareTeamAId || !compareTeamBId || compareTeamAId === compareTeamBId) {
+      return null;
+    }
+
+    const left = compareStatsMap.get(compareTeamAId);
+    const right = compareStatsMap.get(compareTeamBId);
+
+    if (!left || !right) {
+      return null;
+    }
+
+    return { left, right };
+  }, [compareRequested, compareStatsMap, compareTeamAId, compareTeamBId]);
+
   const handleOpenKnockout = () => {
     openKnockoutStage();
     setTimeout(() => scrollToId('knockout'), 120);
@@ -75,6 +102,11 @@ function App() {
     resetTournament();
     setShowResetModal(false);
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
+  const handleOpenHeadToHead = () => {
+    setCompareRequested(false);
+    setShowHeadToHeadModal(true);
   };
 
   return (
@@ -102,52 +134,63 @@ function App() {
 
                 <p className="mt-5 text-lg font-medium text-host-ice/80 sm:text-xl">{SLOGAN}</p>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => scrollToId('group-stage')}
-                    className="rounded-2xl border border-host-ice/15 bg-host-usa/16 px-5 py-3 text-sm font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-host-usa/24"
-                  >
-                    Xem vòng bảng
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => scrollToId('best-third')}
-                    className="rounded-2xl border border-host-ice/15 bg-host-canada/14 px-5 py-3 text-sm font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-host-canada/22"
-                  >
-                    Best 3rd Place
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenKnockout}
-                    disabled={!derivedState.knockoutReady}
-                    className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${derivedState.knockoutReady
-                      ? 'border border-host-mexico/35 bg-host-mexico/18 text-host-ice hover:-translate-y-0.5 hover:bg-host-mexico/24'
-                      : 'cursor-not-allowed border border-white/10 bg-white/5 text-white/35'
-                      }`}
-                  >
-                    Knock-out Stage
-                  </button>
-
-                  {recapStats.isComplete && (
+                <div className="mt-6 overflow-x-auto pb-1">
+                  <div className="flex w-max min-w-full flex-nowrap gap-2.5">
                     <button
                       type="button"
-                      onClick={handleViewRecap}
-                      className="flex items-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/12 px-5 py-3 text-sm font-semibold text-amber-200 transition hover:-translate-y-0.5 hover:bg-amber-400/20"
+                      onClick={() => scrollToId('group-stage')}
+                      className="whitespace-nowrap rounded-xl border border-host-ice/15 bg-host-usa/16 px-3.5 py-2.5 text-xs font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-host-usa/24 sm:text-sm"
                     >
-                      <Trophy className="h-4 w-4" /> Recap WC26
+                      Vòng bảng
                     </button>
-                  )}
 
-                  <button
-                    type="button"
-                    onClick={() => setShowResetModal(true)}
-                    className="flex items-center gap-2 rounded-2xl border border-host-canada/28 bg-host-canada/14 px-5 py-3 text-sm font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-host-canada/18"
-                  >
-                    <RotateCcw className="h-4 w-4" /> Thử lại
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToId('best-third')}
+                      className="whitespace-nowrap rounded-xl border border-host-ice/15 bg-host-canada/14 px-3.5 py-2.5 text-xs font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-host-canada/22 sm:text-sm"
+                    >
+                      Bảng XH Top 3
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleOpenKnockout}
+                      disabled={!derivedState.knockoutReady}
+                      className={`whitespace-nowrap rounded-xl px-3.5 py-2.5 text-xs font-semibold transition sm:text-sm ${derivedState.knockoutReady
+                        ? 'border border-host-mexico/35 bg-host-mexico/18 text-host-ice hover:-translate-y-0.5 hover:bg-host-mexico/24'
+                        : 'cursor-not-allowed border border-white/10 bg-white/5 text-white/35'
+                        }`}
+                    >
+                      Knock-out
+                    </button>
+
+                    {recapStats.isComplete ? (
+                      <button
+                        type="button"
+                        onClick={handleViewRecap}
+                        className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-amber-400/30 bg-amber-400/12 px-3.5 py-2.5 text-xs font-semibold text-amber-200 transition hover:-translate-y-0.5 hover:bg-amber-400/20 sm:text-sm"
+                      >
+                        <Trophy className="h-4 w-4" />WC26 Recap
+                      </button>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={handleOpenHeadToHead}
+                      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-host-ice/15 bg-white/[0.05] px-3.5 py-2.5 text-xs font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-white/[0.1] sm:text-sm"
+                    >
+                      <GitCompareArrows className="h-4 w-4" />
+                      Head-to-Head
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowResetModal(true)}
+                      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-host-canada/28 bg-host-canada/14 px-3.5 py-2.5 text-xs font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-host-canada/18 sm:text-sm"
+                    >
+                      <RotateCcw className="h-4 w-4" /> Reset
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -312,6 +355,27 @@ function App() {
         onClose={() => setShowChampionModal(false)}
         onViewRecap={handleViewRecap}
       />
+
+      <HeadToHeadModal
+        isOpen={showHeadToHeadModal}
+        teams={TEAMS}
+        teamAId={compareTeamAId}
+        teamBId={compareTeamBId}
+        compareRequested={compareRequested}
+        compareStats={compareResult}
+        onChangeTeamA={(teamId) => {
+          setCompareTeamAId(teamId);
+          setCompareRequested(false);
+        }}
+        onChangeTeamB={(teamId) => {
+          setCompareTeamBId(teamId);
+          setCompareRequested(false);
+        }}
+        onCompare={() => setCompareRequested(true)}
+        onClose={() => setShowHeadToHeadModal(false)}
+      />
+
+      <BackToTopButton />
     </div>
   );
 }
