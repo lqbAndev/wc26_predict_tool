@@ -4,6 +4,7 @@ import {
   Goal,
   Medal,
   ShieldAlert,
+  ShieldPlus,
   Swords,
   Target,
   TrendingUp,
@@ -13,6 +14,7 @@ import {
 import { ChampionCup, TriondaBall, WorldCupLogo } from './BrandAssets';
 import { Flag } from './Flag';
 import type { ScorerInfo, TournamentRecapStats } from '../utils/recapStats';
+import type { BestXIPlayer } from '../utils/bestXI';
 
 interface TournamentRecapProps {
   stats: TournamentRecapStats;
@@ -87,6 +89,103 @@ const SeasonMOTSCard = ({
     <div className="mt-1 text-sm text-host-ice/75">{motmCount} MOTM awards</div>
   </div>
 );
+
+const BestXIPlayerCard = ({
+  player,
+  isBestPlayer,
+}: {
+  player: BestXIPlayer;
+  isBestPlayer: boolean;
+}) => (
+  <article
+    className={`rounded-2xl border px-2 py-2 text-center transition ${
+      isBestPlayer
+        ? 'border-amber-300/45 bg-amber-400/12 shadow-[0_0_22px_rgba(245,158,11,0.22)]'
+        : 'border-white/12 bg-white/[0.04]'
+    }`}
+  >
+    <div className="flex items-center justify-center gap-1.5">
+      <Flag teamName={player.teamName} size={16} />
+      <span className="text-[10px] uppercase tracking-[0.18em] text-host-ice/65">{player.lineupPosition}</span>
+    </div>
+    <p className={`mt-1 truncate text-[13px] font-semibold ${isBestPlayer ? 'text-amber-100' : 'text-white'}`}>
+      {player.playerName}
+    </p>
+    <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-white/12 bg-black/20 px-2 py-0.5 text-[10px] text-white/75">
+      <span>G {player.goals}</span>
+      <span>|</span>
+      <span>M {player.motmCount}</span>
+    </div>
+  </article>
+);
+
+const BestXISection = ({ stats }: { stats: TournamentRecapStats }) => {
+  if (!stats.isComplete || !stats.bestXI) {
+    return null;
+  }
+
+  const { bestXI } = stats;
+  const bestPlayer = bestXI.bestPlayer;
+
+  return (
+    <section className="brand-shell mt-6 overflow-hidden p-5 sm:p-6">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.1),transparent_36%),radial-gradient(circle_at_bottom,rgba(59,130,246,0.09),transparent_42%)]" />
+      <div className="relative">
+        <div className="flex items-center gap-2">
+          <ShieldPlus className="h-5 w-5 text-host-mexico" />
+          <h3 className="text-xl font-bold text-white">Best XI of the Tournament (4-3-3)</h3>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-300/28 bg-amber-400/10 px-3 py-2 text-sm text-amber-100">
+          <Trophy className="h-4 w-4" />
+          Best Player: {bestPlayer.playerName} ({bestPlayer.teamName})
+        </div>
+
+        <div className="mt-4 rounded-[24px] border border-white/12 bg-[#071223] p-4 sm:p-5">
+          <div className="space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {bestXI.attackers.map((player) => (
+                <BestXIPlayerCard
+                  key={player.playerId}
+                  player={player}
+                  isBestPlayer={player.playerId === bestPlayer.playerId}
+                />
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {bestXI.midfielders.map((player) => (
+                <BestXIPlayerCard
+                  key={player.playerId}
+                  player={player}
+                  isBestPlayer={player.playerId === bestPlayer.playerId}
+                />
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+              {bestXI.defenders.map((player) => (
+                <BestXIPlayerCard
+                  key={player.playerId}
+                  player={player}
+                  isBestPlayer={player.playerId === bestPlayer.playerId}
+                />
+              ))}
+            </div>
+
+            <div className="mx-auto w-full max-w-[180px]">
+              <BestXIPlayerCard
+                key={bestXI.goalkeeper.playerId}
+                player={bestXI.goalkeeper}
+                isBestPlayer={bestXI.goalkeeper.playerId === bestPlayer.playerId}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const FeaturedMatchCard = ({
   title,
@@ -346,6 +445,8 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
           </div>
         ) : null}
       </div>
+
+      <BestXISection stats={stats} />
 
       <div className="mt-6 space-y-4">
         <div className="flex items-center gap-2">

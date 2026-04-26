@@ -1,4 +1,4 @@
-import { TEAMS_BY_ID, ROUND_LABELS } from '../data/tournament';
+import { ROUND_LABELS, TEAMS_BY_ID } from '../data/tournament';
 import type {
   GroupMatch,
   KnockoutMatch,
@@ -6,11 +6,7 @@ import type {
   SeasonMOTM,
   TopScorerEntry,
 } from '../types/tournament';
-
-/* ──────────────────────────────────────────────────────────────────────────────
- * Tournament Recap Stats — computes all summary data from match results.
- * Nothing is hard-coded; every value derives from the actual match state.
- * ────────────────────────────────────────────────────────────────────────── */
+import { buildBestXI, type BestXIResult } from './bestXI';
 
 export interface ScorerInfo {
   playerName: string;
@@ -30,37 +26,22 @@ export interface MatchHighlight {
 }
 
 export interface TournamentRecapStats {
-  /** Name of the champion team */
   champion: string;
-  /** Name of the runner-up team */
   runnerUp: string;
-  /** Name of the third-place team */
   thirdPlace: string;
-  /** Top scorer entry */
   topScorer: TopScorerEntry | null;
-  /** Player with best MOTM performance across the tournament */
   seasonMOTM: SeasonMOTM | null;
-  /** Total goals across the entire tournament */
+  bestXI: BestXIResult | null;
   totalGoals: number;
-  /** Total matches played */
   totalMatches: number;
-  /** Number of matches decided by penalty shootout */
   totalPenaltyMatches: number;
-  /** The match with the most combined goals */
   highestScoringMatch: MatchHighlight | null;
-  /** Team that scored the most goals across the tournament */
   mostGoalsTeam: { teamName: string; goals: number } | null;
-  /** Team that conceded the most goals across the tournament */
   mostConcededTeam: { teamName: string; goals: number } | null;
-  /** Final match highlight */
   finalMatch: MatchHighlight | null;
-  /** Third-place match highlight */
   thirdPlaceMatch: MatchHighlight | null;
-  /** Most dramatic match highlight (penalty/close margin) */
   mostDramaticMatch: MatchHighlight | null;
-  /** Goals per match average */
   goalsPerMatch: number;
-  /** Whether the tournament is fully complete */
   isComplete: boolean;
 }
 
@@ -71,20 +52,21 @@ const buildMatchHighlight = (
   match: GroupMatch | KnockoutMatch,
   roundLabel: string,
 ): MatchHighlight | null => {
-  if (match.homeScore == null || match.awayScore == null) return null;
+  if (match.homeScore == null || match.awayScore == null) {
+    return null;
+  }
 
-  const homeTeamId = 'homeTeamId' in match ? match.homeTeamId : null;
-  const awayTeamId = 'awayTeamId' in match ? match.awayTeamId : null;
-
-  // Extract goal scorers from timeline or scorers data
   const homeScorers: ScorerInfo[] = [];
   const awayScorers: ScorerInfo[] = [];
 
   if (match.timeline) {
     for (const event of match.timeline) {
       const info: ScorerInfo = { playerName: event.playerName, displayMinute: event.displayMinute };
-      if (event.side === 'home') homeScorers.push(info);
-      else awayScorers.push(info);
+      if (event.side === 'home') {
+        homeScorers.push(info);
+      } else {
+        awayScorers.push(info);
+      }
     }
   } else if (match.scorers) {
     for (const event of match.scorers.home) {
@@ -96,34 +78,23 @@ const buildMatchHighlight = (
   }
 
   return {
-    homeTeamName: getTeamName(homeTeamId),
-    awayTeamName: getTeamName(awayTeamId),
+    homeTeamName: getTeamName(match.homeTeamId),
+    awayTeamName: getTeamName(match.awayTeamId),
     homeScore: match.homeScore,
     awayScore: match.awayScore,
     totalGoals: match.homeScore + match.awayScore,
     roundLabel,
-    penalty: 'penalty' in match && match.penalty
-      ? { home: match.penalty.home, away: match.penalty.away }
-      : null,
+    penalty: 'penalty' in match && match.penalty ? { home: match.penalty.home, away: match.penalty.away } : null,
     homeScorers,
     awayScorers,
   };
 };
 
-/**
- * Check whether the entire tournament (all knockout rounds including final
- * and third-place match) has been completed.
- */
-export const isTournamentComplete = (
-  knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>,
-): boolean => {
+export const isTournamentComplete = (knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>) => {
   const finalMatch = knockoutMatches.final[0];
   const thirdPlaceMatch = knockoutMatches.thirdPlace[0];
 
-  return (
-    finalMatch?.status === 'completed' &&
-    thirdPlaceMatch?.status === 'completed'
-  );
+  return finalMatch?.status === 'completed' && thirdPlaceMatch?.status === 'completed';
 };
 
 export const calculateTournamentStats = (
@@ -132,79 +103,63 @@ export const calculateTournamentStats = (
   topScorers: TopScorerEntry[],
   seasonMOTM: SeasonMOTM | null,
 ): TournamentRecapStats => {
-  const allKnockout = Object.values(knockoutMatches).flat();
+  const allKnockoutMatches = Object.values(knockoutMatches).flat();
+  const completedGroupMatches = groupMatches.filter((match) => match.status === 'completed');
+  const completedKnockoutMatches = allKnockoutMatches.filter((match) => match.status === 'completed');
   const isComplete = isTournamentComplete(knockoutMatches);
 
-  // --- Champion, Runner-up, Third ---
   const finalMatch = knockoutMatches.final[0];
   const thirdPlaceMatch = knockoutMatches.thirdPlace[0];
   const champion = getTeamName(finalMatch?.winnerTeamId ?? null);
   const runnerUp = getTeamName(finalMatch?.loserTeamId ?? null);
   const thirdPlace = getTeamName(thirdPlaceMatch?.winnerTeamId ?? null);
 
-  // --- Goals ---
-  const completedGroup = groupMatches.filter((m) => m.status === 'completed');
-  const completedKnockout = allKnockout.filter((m) => m.status === 'completed');
-
   let totalGoals = 0;
   const teamGoalsFor = new Map<string, number>();
   const teamGoalsAgainst = new Map<string, number>();
 
   const addGoals = (teamId: string | null, goalsFor: number, goalsAgainst: number) => {
-    if (!teamId) return;
+    if (!teamId) {
+      return;
+    }
     teamGoalsFor.set(teamId, (teamGoalsFor.get(teamId) ?? 0) + goalsFor);
     teamGoalsAgainst.set(teamId, (teamGoalsAgainst.get(teamId) ?? 0) + goalsAgainst);
   };
 
-  for (const m of completedGroup) {
-    if (m.homeScore != null && m.awayScore != null) {
-      totalGoals += m.homeScore + m.awayScore;
-      addGoals(m.homeTeamId, m.homeScore, m.awayScore);
-      addGoals(m.awayTeamId, m.awayScore, m.homeScore);
+  for (const match of [...completedGroupMatches, ...completedKnockoutMatches]) {
+    if (match.homeScore == null || match.awayScore == null) {
+      continue;
     }
+
+    totalGoals += match.homeScore + match.awayScore;
+    addGoals(match.homeTeamId, match.homeScore, match.awayScore);
+    addGoals(match.awayTeamId, match.awayScore, match.homeScore);
   }
 
-  for (const m of completedKnockout) {
-    if (m.homeScore != null && m.awayScore != null) {
-      totalGoals += m.homeScore + m.awayScore;
-      addGoals(m.homeTeamId, m.homeScore, m.awayScore);
-      addGoals(m.awayTeamId, m.awayScore, m.homeScore);
-    }
-  }
+  const totalMatches = completedGroupMatches.length + completedKnockoutMatches.length;
+  const totalPenaltyMatches = completedKnockoutMatches.filter((match) => match.penalty !== null).length;
 
-  // --- Total matches ---
-  const totalMatches = completedGroup.length + completedKnockout.length;
-
-  // --- Penalty matches ---
-  const totalPenaltyMatches = completedKnockout.filter((m) => m.penalty !== null).length;
-
-  // --- Highest scoring match ---
   let highestScoringMatch: MatchHighlight | null = null;
   let highestGoals = -1;
 
-  for (const m of completedGroup) {
-    if (m.homeScore != null && m.awayScore != null) {
-      const total = m.homeScore + m.awayScore;
-      if (total > highestGoals) {
-        highestGoals = total;
-        highestScoringMatch = buildMatchHighlight(m, `Bảng ${m.group}`);
-      }
+  for (const match of completedGroupMatches) {
+    const goals = (match.homeScore ?? 0) + (match.awayScore ?? 0);
+    if (goals > highestGoals) {
+      highestGoals = goals;
+      highestScoringMatch = buildMatchHighlight(match, `Bảng ${match.group}`);
     }
   }
 
-  for (const m of completedKnockout) {
-    if (m.homeScore != null && m.awayScore != null) {
-      const total = m.homeScore + m.awayScore;
-      if (total > highestGoals) {
-        highestGoals = total;
-        highestScoringMatch = buildMatchHighlight(m, ROUND_LABELS[m.round]);
-      }
+  for (const match of completedKnockoutMatches) {
+    const goals = (match.homeScore ?? 0) + (match.awayScore ?? 0);
+    if (goals > highestGoals) {
+      highestGoals = goals;
+      highestScoringMatch = buildMatchHighlight(match, ROUND_LABELS[match.round]);
     }
   }
 
-  // --- Most goals team ---
   let mostGoalsTeam: { teamName: string; goals: number } | null = null;
-  let maxGoals = 0;
+  let maxGoals = -1;
   for (const [teamId, goals] of teamGoalsFor) {
     if (goals > maxGoals) {
       maxGoals = goals;
@@ -212,9 +167,8 @@ export const calculateTournamentStats = (
     }
   }
 
-  // --- Most conceded team ---
   let mostConcededTeam: { teamName: string; goals: number } | null = null;
-  let maxConceded = 0;
+  let maxConceded = -1;
   for (const [teamId, goals] of teamGoalsAgainst) {
     if (goals > maxConceded) {
       maxConceded = goals;
@@ -222,62 +176,68 @@ export const calculateTournamentStats = (
     }
   }
 
-  // --- Match highlights ---
-  const finalHighlight = finalMatch ? buildMatchHighlight(finalMatch, 'Chung kết') : null;
-  const thirdPlaceHighlight = thirdPlaceMatch ? buildMatchHighlight(thirdPlaceMatch, 'Tranh hạng 3') : null;
+  const finalMatchHighlight = finalMatch ? buildMatchHighlight(finalMatch, 'Chung kết') : null;
+  const thirdPlaceMatchHighlight = thirdPlaceMatch ? buildMatchHighlight(thirdPlaceMatch, 'Tranh hạng 3') : null;
 
-  // --- Most Dramatic Match (penalty / close margin, excl. final & 3rd place) ---
   let mostDramaticMatch: MatchHighlight | null = null;
-  let maxDramaScore = -1;
+  let highestDramaScore = -1;
 
-  const scoreDrama = (m: GroupMatch | KnockoutMatch): number => {
-    if (m.homeScore == null || m.awayScore == null) return -1;
+  const computeDramaScore = (match: GroupMatch | KnockoutMatch) => {
+    if (match.homeScore == null || match.awayScore == null) {
+      return -1;
+    }
+
+    const goalDiff = Math.abs(match.homeScore - match.awayScore);
     let score = 0;
-    const diff = Math.abs(m.homeScore - m.awayScore);
-    if ('penalty' in m && m.penalty) score += 10;
-    if (diff === 0) score += 5;
-    else if (diff === 1) score += 3;
-    score += (m.homeScore + m.awayScore) * 0.5;
+    if ('penalty' in match && match.penalty) {
+      score += 10;
+    }
+    if (goalDiff === 0) {
+      score += 5;
+    } else if (goalDiff === 1) {
+      score += 3;
+    }
+    score += (match.homeScore + match.awayScore) * 0.5;
     return score;
   };
 
-  for (const m of completedGroup) {
-    const drama = scoreDrama(m);
-    if (drama > maxDramaScore) {
-      maxDramaScore = drama;
-      mostDramaticMatch = buildMatchHighlight(m, `Bảng ${m.group}`);
+  for (const match of completedGroupMatches) {
+    const dramaScore = computeDramaScore(match);
+    if (dramaScore > highestDramaScore) {
+      highestDramaScore = dramaScore;
+      mostDramaticMatch = buildMatchHighlight(match, `Bảng ${match.group}`);
     }
   }
 
-  for (const m of completedKnockout) {
-    if (m.round === 'final' || m.round === 'thirdPlace') continue;
-    const drama = scoreDrama(m);
-    if (drama > maxDramaScore) {
-      maxDramaScore = drama;
-      mostDramaticMatch = buildMatchHighlight(m, ROUND_LABELS[m.round]);
+  for (const match of completedKnockoutMatches) {
+    if (match.round === 'final' || match.round === 'thirdPlace') {
+      continue;
+    }
+    const dramaScore = computeDramaScore(match);
+    if (dramaScore > highestDramaScore) {
+      highestDramaScore = dramaScore;
+      mostDramaticMatch = buildMatchHighlight(match, ROUND_LABELS[match.round]);
     }
   }
 
-  // --- Top scorer ---
-  const topScorer = topScorers[0] ?? null;
-
-  // --- Goals per match ---
-  const goalsPerMatch = totalMatches > 0 ? Math.round((totalGoals / totalMatches) * 100) / 100 : 0;
+  const goalsPerMatch = totalMatches > 0 ? Number((totalGoals / totalMatches).toFixed(2)) : 0;
+  const bestXI = isComplete ? buildBestXI(groupMatches, knockoutMatches) : null;
 
   return {
     champion,
     runnerUp,
     thirdPlace,
-    topScorer,
+    topScorer: topScorers[0] ?? null,
     seasonMOTM,
+    bestXI,
     totalGoals,
     totalMatches,
     totalPenaltyMatches,
     highestScoringMatch,
     mostGoalsTeam,
     mostConcededTeam,
-    finalMatch: finalHighlight,
-    thirdPlaceMatch: thirdPlaceHighlight,
+    finalMatch: finalMatchHighlight,
+    thirdPlaceMatch: thirdPlaceMatchHighlight,
     mostDramaticMatch,
     goalsPerMatch,
     isComplete,
