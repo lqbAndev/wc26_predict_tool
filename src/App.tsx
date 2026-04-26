@@ -64,9 +64,8 @@ function App() {
         coreState.groupMatches,
         coreState.knockoutMatches,
         derivedState.topScorers,
-        derivedState.seasonMOTM,
       ),
-    [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers, derivedState.seasonMOTM],
+    [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers],
   );
 
   const compareStatsMap = useMemo(
