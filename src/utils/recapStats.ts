@@ -4,6 +4,7 @@ import type {
   KnockoutMatch,
   KnockoutRound,
   SeasonMOTM,
+  Team,
   TopScorerEntry,
 } from '../types/tournament';
 import { buildBestXI, type BestXIResult } from './bestXI';
@@ -25,6 +26,23 @@ export interface MatchHighlight {
   awayScorers: ScorerInfo[];
 }
 
+export interface GoldenGloveInfo {
+  playerName: string;
+  teamName: string;
+  cleanSheets: number;
+}
+
+export interface BiggestFlopInfo {
+  teamName: string;
+  rank: number;
+}
+
+export interface CinderellaInfo {
+  teamName: string;
+  rank: number;
+  journey: string;
+}
+
 export interface TournamentRecapStats {
   champion: string;
   runnerUp: string;
@@ -43,6 +61,9 @@ export interface TournamentRecapStats {
   mostDramaticMatch: MatchHighlight | null;
   goalsPerMatch: number;
   isComplete: boolean;
+  goldenGlove: GoldenGloveInfo | null;
+  biggestFlop: BiggestFlopInfo | null;
+  cinderella: CinderellaInfo | null;
 }
 
 const getTeamName = (teamId: string | null): string =>
@@ -101,6 +122,7 @@ export const calculateTournamentStats = (
   groupMatches: GroupMatch[],
   knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>,
   topScorers: TopScorerEntry[],
+  teams?: Team[],
 ): TournamentRecapStats => {
   const allKnockoutMatches = Object.values(knockoutMatches).flat();
   const completedGroupMatches = groupMatches.filter((match) => match.status === 'completed');
@@ -233,6 +255,125 @@ export const calculateTournamentStats = (
     };
   }
 
+  // ═══ GOLDEN GLOVE — GK of team with most clean sheets ═══
+  let goldenGlove: GoldenGloveInfo | null = null;
+  if (isComplete) {
+    const teamCleanSheets = new Map<string, number>();
+    for (const match of [...completedGroupMatches, ...completedKnockoutMatches]) {
+      if (match.homeScore == null || match.awayScore == null) continue;
+      if (!match.homeTeamId || !match.awayTeamId) continue;
+      if (match.awayScore === 0) {
+        teamCleanSheets.set(match.homeTeamId, (teamCleanSheets.get(match.homeTeamId) ?? 0) + 1);
+      }
+      if (match.homeScore === 0) {
+        teamCleanSheets.set(match.awayTeamId, (teamCleanSheets.get(match.awayTeamId) ?? 0) + 1);
+      }
+    }
+
+    let bestTeamId: string | null = null;
+    let bestCS = 0;
+    for (const [teamId, cs] of teamCleanSheets) {
+      if (cs > bestCS) {
+        bestCS = cs;
+        bestTeamId = teamId;
+      }
+    }
+
+    if (bestTeamId && bestCS > 0) {
+      const team = TEAMS_BY_ID[bestTeamId];
+      if (team) {
+        const gk = team.players.find((p) => p.position === 'GK');
+        goldenGlove = {
+          playerName: gk?.name ?? 'Thủ môn không xác định',
+          teamName: team.name,
+          cleanSheets: bestCS,
+        };
+      }
+    }
+  }
+
+  // ═══ BIGGEST FLOP — Top 10 rated team eliminated in group stage ═══
+  let biggestFlop: BiggestFlopInfo | null = null;
+  if (isComplete && teams?.length) {
+    const sortedByRating = [...teams].sort((a, b) => b.rating - a.rating);
+    const top10 = sortedByRating.slice(0, 10);
+
+    // Find teams that did NOT appear in any knockout match
+    const knockoutTeamIds = new Set<string>();
+    for (const matches of Object.values(knockoutMatches)) {
+      for (const match of matches) {
+        if (match.homeTeamId) knockoutTeamIds.add(match.homeTeamId);
+        if (match.awayTeamId) knockoutTeamIds.add(match.awayTeamId);
+      }
+    }
+
+    for (let i = 0; i < top10.length; i++) {
+      const team = top10[i];
+      if (!knockoutTeamIds.has(team.id)) {
+        biggestFlop = { teamName: team.name, rank: i + 1 };
+        break;
+      }
+    }
+  }
+
+  // ═══ CINDERELLA — Bottom-half rated team reaching QF or further ═══
+  let cinderella: CinderellaInfo | null = null;
+  if (isComplete && teams?.length) {
+    const sortedByRating = [...teams].sort((a, b) => b.rating - a.rating);
+    const halfwayIndex = Math.floor(sortedByRating.length / 2);
+    const bottomHalf = new Set(sortedByRating.slice(halfwayIndex).map((t) => t.id));
+
+    const KO_ROUND_ORDER = ['roundOf32', 'roundOf16', 'quarterfinals', 'semifinals', 'thirdPlace', 'final'] as const;
+    const DEEP_ROUNDS: string[] = ['quarterfinals', 'semifinals', 'thirdPlace', 'final'];
+
+    const deepestRound = new Map<string, string>();
+    for (const round of KO_ROUND_ORDER) {
+      for (const match of knockoutMatches[round]) {
+        if (match.status !== 'completed') continue;
+        if (match.homeTeamId && bottomHalf.has(match.homeTeamId) && DEEP_ROUNDS.includes(round)) {
+          deepestRound.set(match.homeTeamId, round);
+        }
+        if (match.awayTeamId && bottomHalf.has(match.awayTeamId) && DEEP_ROUNDS.includes(round)) {
+          deepestRound.set(match.awayTeamId, round);
+        }
+      }
+    }
+
+    const ROUND_DEPTH: Record<string, number> = {
+      quarterfinals: 1,
+      semifinals: 2,
+      thirdPlace: 3,
+      final: 4,
+    };
+
+    let bestCinderellaId: string | null = null;
+    let bestDepth = 0;
+    let bestRating = Infinity;
+
+    for (const [teamId, round] of deepestRound) {
+      const depth = ROUND_DEPTH[round] ?? 0;
+      const teamData = TEAMS_BY_ID[teamId];
+      if (!teamData) continue;
+
+      if (depth > bestDepth || (depth === bestDepth && teamData.rating < bestRating)) {
+        bestDepth = depth;
+        bestRating = teamData.rating;
+        bestCinderellaId = teamId;
+      }
+    }
+
+    if (bestCinderellaId) {
+      const team = TEAMS_BY_ID[bestCinderellaId];
+      const rank = sortedByRating.findIndex(t => t.id === bestCinderellaId) + 1;
+      const roundLabel = ROUND_LABELS[deepestRound.get(bestCinderellaId)! as keyof typeof ROUND_LABELS] ?? deepestRound.get(bestCinderellaId)!;
+      cinderella = {
+        teamName: team.name,
+        rank: rank,
+        journey: `Tới ${roundLabel}`,
+      };
+    }
+  }
+
   return {
     champion,
     runnerUp,
@@ -251,5 +392,8 @@ export const calculateTournamentStats = (
     mostDramaticMatch,
     goalsPerMatch,
     isComplete,
+    goldenGlove,
+    biggestFlop,
+    cinderella,
   };
 };

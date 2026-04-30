@@ -94,11 +94,10 @@ const TeamSelect = ({ label, teams, value, blockedTeamId, onChange }: TeamSelect
                       onChange(team.id);
                       setOpen(false);
                     }}
-                    className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[15px] font-medium transition ${
-                      team.id === value
-                        ? 'border border-host-mexico/35 bg-host-mexico/16 text-white'
-                        : 'border border-transparent text-white/80 hover:border-white/10 hover:bg-white/[0.08]'
-                    }`}
+                    className={`flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[15px] font-medium transition ${team.id === value
+                      ? 'border border-host-mexico/35 bg-host-mexico/16 text-white'
+                      : 'border border-transparent text-white/80 hover:border-white/10 hover:bg-white/[0.08]'
+                      }`}
                   >
                     <Flag teamName={team.name} size={18} />
                     <span className="truncate">{team.name}</span>
@@ -148,13 +147,43 @@ const MetricRow = ({
       <div className={`rounded-xl px-2 py-1 text-[15px] font-semibold text-white ${leftBetter ? 'bg-host-mexico/20 ring-1 ring-host-mexico/45' : ''}`}>
         {leftValue}
       </div>
-      <div className="text-xs uppercase tracking-[0.16em] text-white/55">{label}</div>
+      <div className="min-w-[140px] text-center text-xs uppercase tracking-[0.16em] text-white/55">{label}</div>
       <div className={`rounded-xl px-2 py-1 text-right text-[15px] font-semibold text-white ${rightBetter ? 'bg-host-mexico/20 ring-1 ring-host-mexico/45' : ''}`}>
         {rightValue}
       </div>
     </div>
   </div>
 );
+
+const SectionHeader = ({ title }: { title: string }) => (
+  <div className="flex items-center gap-3 pt-1">
+    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+    <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-host-mexico/70">{title}</span>
+    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+  </div>
+);
+
+/** Small coloured badge for recent-form letters */
+const FormBadge = ({ form }: { form: string }) => {
+  if (form === '--') return <span className="text-white/40">--</span>;
+
+  const letters = form.split('-');
+  return (
+    <span className="inline-flex gap-0.5">
+      {letters.map((l, i) => {
+        let bg = 'bg-white/10 text-white/60';
+        if (l === 'W') bg = 'bg-emerald-500/25 text-emerald-300';
+        if (l === 'L') bg = 'bg-red-500/25 text-red-300';
+        if (l === 'D') bg = 'bg-amber-500/25 text-amber-300';
+        return (
+          <span key={i} className={`inline-flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold ${bg}`}>
+            {l}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
 
 export const HeadToHeadModal = ({
   isOpen,
@@ -180,8 +209,8 @@ export const HeadToHeadModal = ({
     <div className="fixed inset-0 z-[90] flex flex-col justify-end sm:block">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Mobile: bottom-sheet; Desktop: centered modal */}
-      <div className="relative mx-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] border border-white/15 bg-[#08131f] shadow-[0_-8px_40px_rgba(0,0,0,0.6)] sm:mt-10 sm:max-h-[88vh] sm:w-[min(980px,94vw)] sm:rounded-[28px] sm:shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
+      {/* Mobile: bottom-sheet; Desktop: centered wider modal */}
+      <div className="relative mx-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] border border-white/15 bg-[#08131f] shadow-[0_-8px_40px_rgba(0,0,0,0.6)] sm:mt-[4vh] sm:min-h-[80vh] sm:max-h-[92vh] sm:w-[min(860px,92vw)] sm:rounded-[28px] sm:shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
         {/* Mobile drag handle */}
         <div className="flex shrink-0 justify-center pt-3 sm:hidden">
           <div className="h-1 w-10 rounded-full bg-white/20" />
@@ -213,11 +242,10 @@ export const HeadToHeadModal = ({
               type="button"
               disabled={!canCompare}
               onClick={onCompare}
-              className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition sm:inline-flex sm:h-[46px] sm:w-auto ${
-                canCompare
-                  ? 'border border-host-mexico/35 bg-host-mexico/18 text-host-ice hover:-translate-y-0.5 hover:bg-host-mexico/24'
-                  : 'cursor-not-allowed border border-white/10 bg-white/5 text-white/35'
-              }`}
+              className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition sm:inline-flex sm:h-[46px] sm:w-auto ${canCompare
+                ? 'border border-host-mexico/35 bg-host-mexico/18 text-host-ice hover:-translate-y-0.5 hover:bg-host-mexico/24'
+                : 'cursor-not-allowed border border-white/10 bg-white/5 text-white/35'
+                }`}
             >
               <GitCompareArrows className="h-4 w-4" />
               Compare
@@ -225,7 +253,7 @@ export const HeadToHeadModal = ({
           </div>
 
           {/* Compare results */}
-          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3 sm:mt-5 sm:p-4">
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3 sm:mt-5 sm:p-5">
             {!compareRequested ? (
               <p className="text-[15px] text-white/65">Chọn 2 đội bất kỳ rồi bấm Compare để xem chỉ số đối đầu.</p>
             ) : !compareStats ? (
@@ -260,19 +288,20 @@ export const HeadToHeadModal = ({
                   </div>
                 </div>
 
+                {/* ═══ TỔNG QUAN ═══ */}
+                <SectionHeader title="Tổng quan" />
+
                 <MetricRow
-                  label="Tổng bàn thắng"
-                  leftValue={compareStats.left.totalGoals}
-                  rightValue={compareStats.right.totalGoals}
-                  leftBetter={compareStats.left.totalGoals > compareStats.right.totalGoals}
-                  rightBetter={compareStats.right.totalGoals > compareStats.left.totalGoals}
+                  label="Hành trình giải đấu"
+                  leftValue={compareStats.left.journey}
+                  rightValue={compareStats.right.journey}
+                  leftBetter={compareStats.left.journeyRank > compareStats.right.journeyRank}
+                  rightBetter={compareStats.right.journeyRank > compareStats.left.journeyRank}
                 />
                 <MetricRow
-                  label="Bàn thua"
-                  leftValue={compareStats.left.goalsConceded}
-                  rightValue={compareStats.right.goalsConceded}
-                  leftBetter={compareStats.left.goalsConceded < compareStats.right.goalsConceded}
-                  rightBetter={compareStats.right.goalsConceded < compareStats.left.goalsConceded}
+                  label="Tổng trận đấu"
+                  leftValue={compareStats.left.totalMatches}
+                  rightValue={compareStats.right.totalMatches}
                 />
                 <MetricRow
                   label="Số trận thắng"
@@ -282,24 +311,44 @@ export const HeadToHeadModal = ({
                   rightBetter={compareStats.right.wins > compareStats.left.wins}
                 />
                 <MetricRow
-                  label="MOTM count"
+                  label="Tỷ lệ thắng"
+                  leftValue={compareStats.left.winRate}
+                  rightValue={compareStats.right.winRate}
+                  leftBetter={parseFloat(compareStats.left.winRate) > parseFloat(compareStats.right.winRate)}
+                  rightBetter={parseFloat(compareStats.right.winRate) > parseFloat(compareStats.left.winRate)}
+                />
+                <MetricRow
+                  label="Tổng MOTM"
                   leftValue={compareStats.left.motmCount}
                   rightValue={compareStats.right.motmCount}
                   leftBetter={compareStats.left.motmCount > compareStats.right.motmCount}
                   rightBetter={compareStats.right.motmCount > compareStats.left.motmCount}
                 />
-                <MetricRow
-                  label="Top scorer / best player"
-                  leftValue={compareStats.left.bestPlayer}
-                  rightValue={compareStats.right.bestPlayer}
-                />
-                <MetricRow
-                  label="Hành trình giải đấu"
-                  leftValue={compareStats.left.journey}
-                  rightValue={compareStats.right.journey}
-                  leftBetter={compareStats.left.journeyRank > compareStats.right.journeyRank}
-                  rightBetter={compareStats.right.journeyRank > compareStats.left.journeyRank}
-                />
+
+                {/* Recent form — custom render with badges */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                  <div className="flex flex-col gap-1 sm:hidden">
+                    <div className="text-[10px] uppercase tracking-[0.16em] text-white/55 text-center">Phong độ gần đây</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex justify-center rounded-xl bg-white/[0.04] px-2 py-1.5">
+                        <FormBadge form={compareStats.left.recentForm} />
+                      </div>
+                      <div className="flex justify-center rounded-xl bg-white/[0.04] px-2 py-1.5">
+                        <FormBadge form={compareStats.right.recentForm} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hidden sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-3">
+                    <div className="rounded-xl px-2 py-1">
+                      <FormBadge form={compareStats.left.recentForm} />
+                    </div>
+                    <div className="min-w-[140px] text-center text-xs uppercase tracking-[0.16em] text-white/55">Phong độ gần đây</div>
+                    <div className="flex justify-end rounded-xl px-2 py-1">
+                      <FormBadge form={compareStats.right.recentForm} />
+                    </div>
+                  </div>
+                </div>
+
                 <MetricRow
                   label="Số trận penalty"
                   leftValue={compareStats.left.penaltyMatches}
@@ -307,26 +356,63 @@ export const HeadToHeadModal = ({
                   leftBetter={compareStats.left.penaltyMatches < compareStats.right.penaltyMatches}
                   rightBetter={compareStats.right.penaltyMatches < compareStats.left.penaltyMatches}
                 />
+
+
+
+                {/* ═══ TẤN CÔNG ═══ */}
+                <SectionHeader title="Tấn Công" />
+
                 <MetricRow
-                  label="Số bàn toàn giải"
-                  leftValue={`${compareStats.left.totalGoals} (${compareStats.left.goalsPerMatch}/trận)`}
-                  rightValue={`${compareStats.right.totalGoals} (${compareStats.right.goalsPerMatch}/trận)`}
+                  label="Tổng bàn thắng"
+                  leftValue={compareStats.left.totalGoals}
+                  rightValue={compareStats.right.totalGoals}
                   leftBetter={compareStats.left.totalGoals > compareStats.right.totalGoals}
                   rightBetter={compareStats.right.totalGoals > compareStats.left.totalGoals}
                 />
+                <MetricRow
+                  label="Bàn / trận"
+                  leftValue={`${compareStats.left.goalsPerMatch}`}
+                  rightValue={`${compareStats.right.goalsPerMatch}`}
+                  leftBetter={compareStats.left.goalsPerMatch > compareStats.right.goalsPerMatch}
+                  rightBetter={compareStats.right.goalsPerMatch > compareStats.left.goalsPerMatch}
+                />
+                <MetricRow
+                  label="Hiệu số bàn thắng bại"
+                  leftValue={compareStats.left.goalDifference > 0 ? `+${compareStats.left.goalDifference}` : `${compareStats.left.goalDifference}`}
+                  rightValue={compareStats.right.goalDifference > 0 ? `+${compareStats.right.goalDifference}` : `${compareStats.right.goalDifference}`}
+                  leftBetter={compareStats.left.goalDifference > compareStats.right.goalDifference}
+                  rightBetter={compareStats.right.goalDifference > compareStats.left.goalDifference}
+                />
+                <MetricRow
+                  label="Trận thắng đậm nhất"
+                  leftValue={compareStats.left.biggestWin}
+                  rightValue={compareStats.right.biggestWin}
+                />
+                <MetricRow
+                  label="Top scorer"
+                  leftValue={compareStats.left.bestPlayer}
+                  rightValue={compareStats.right.bestPlayer}
+                />
+
+                {/* ═══ PHÒNG NGỰ ═══ */}
+                <SectionHeader title="Phòng Ngự" />
+
+                <MetricRow
+                  label="Bàn thua"
+                  leftValue={compareStats.left.goalsConceded}
+                  rightValue={compareStats.right.goalsConceded}
+                  leftBetter={compareStats.left.goalsConceded < compareStats.right.goalsConceded}
+                  rightBetter={compareStats.right.goalsConceded < compareStats.left.goalsConceded}
+                />
+                <MetricRow
+                  label="Giữ sạch lưới"
+                  leftValue={compareStats.left.cleanSheets}
+                  rightValue={compareStats.right.cleanSheets}
+                  leftBetter={compareStats.left.cleanSheets > compareStats.right.cleanSheets}
+                  rightBetter={compareStats.right.cleanSheets > compareStats.left.cleanSheets}
+                />
               </div>
             )}
-          </div>
-
-          {/* Footer close button */}
-          <div className="mt-4 flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/75 transition hover:bg-white/[0.08] hover:text-white sm:w-auto sm:py-2"
-            >
-              Đóng
-            </button>
           </div>
         </div>
       </div>
