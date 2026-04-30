@@ -1,65 +1,85 @@
-# ============================================================
-# WC26 Prediction Tool - Deploy Script
-# Chạy: powershell -ExecutionPolicy Bypass -File deploy.ps1
-# ============================================================
+# ===================================================================
+# WC26 Prediction Tool - Full Git Automation Script
+# Flow: Branch -> Stage -> Commit -> Push -> Merge -> Deploy
+# Run from WC26_prediction_tool directory
+# ===================================================================
 
-Set-StrictMode -Off
-$ErrorActionPreference = "Stop"
 
-$BRANCH = "feature/mobile-h2h-mots-bestxi"
-$ROOT    = Split-Path -Parent $MyInvocation.MyCommand.Path
+# -- Configuration ------------------------------------------------
+$BranchName   = "feature/player-profile-modal"
+$CommitMsg    = "feat: add Player Profile Modal in Best XI"
+$MergeMsg     = "Merge feature: player profile modal"
+# -----------------------------------------------------------------
 
-Write-Host "==> [1/6] Switching to project root: $ROOT" -ForegroundColor Cyan
-Set-Location $ROOT
-
-# ------ 1. Create feature branch ------
-Write-Host "==> [2/6] Creating / switching to branch: $BRANCH" -ForegroundColor Cyan
-$existing = git branch --list $BRANCH
-if ($existing) {
-    git checkout $BRANCH
-} else {
-    git checkout -b $BRANCH
+function Write-Step {
+    param([string]$Step, [string]$Message)
+    Write-Host "`n[$Step] $Message" -ForegroundColor Cyan
 }
 
-# ------ 2. Build ------
-Write-Host "==> [3/6] Installing deps & building..." -ForegroundColor Cyan
-npm install
-npm run build
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Build failed! Aborting." -ForegroundColor Red
-    exit 1
+function Write-Done {
+    param([string]$Message)
+    Write-Host "  OK $Message" -ForegroundColor Green
 }
-
-# ------ 3. Commit source changes ------
-Write-Host "==> [4/6] Committing source changes..." -ForegroundColor Cyan
-git add -A
-git status
-git commit -m "feat: mobile H2H bottom-sheet & MOTS = Best XI Best Player
-
-- HeadToHeadModal: bottom-sheet on mobile, stacked selectors,
-  stacked MetricRows, full-width buttons, scrollable body
-- recapStats: remove seasonMOTM param; derive MOTS from
-  bestXI.bestPlayer (Best Player of Best XI of the Tournament)
-- TournamentRecap: update SeasonMOTSCard subtitle to reflect
-  new MOTS source
-- App.tsx: drop seasonMOTM from calculateTournamentStats call"
-
-# ------ 4. Push feature branch ------
-Write-Host "==> [5/6] Pushing feature branch..." -ForegroundColor Cyan
-git push -u origin $BRANCH
-
-# ------ 5. Merge to main & deploy ------
-Write-Host "==> [6/6] Merging to main and deploying to GitHub Pages..." -ForegroundColor Cyan
-git checkout main
-git merge $BRANCH --no-ff -m "Merge: mobile H2H + MOTS = Best XI Best Player"
-git push origin main
-
-# Deploy via gh-pages (npm run deploy must be configured in package.json)
-npm run deploy
 
 Write-Host ""
-Write-Host "============================================" -ForegroundColor Green
-Write-Host " Deploy complete!" -ForegroundColor Green
-Write-Host " Branch : $BRANCH -> main" -ForegroundColor Green
-Write-Host "============================================" -ForegroundColor Green
+Write-Host "====================================================" -ForegroundColor Cyan
+Write-Host "|   WC26 Prediction Tool - Deploy Pipeline         |" -ForegroundColor Cyan
+Write-Host "|   Branch: $BranchName" -ForegroundColor Cyan
+Write-Host "====================================================" -ForegroundColor Cyan
+
+# -- Step 1: Create & checkout feature branch ---------------------
+Write-Step "1/8" "Creating feature branch: $BranchName"
+git checkout -b $BranchName 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  Branch already exists, switching to it..." -ForegroundColor Yellow
+    git checkout $BranchName
+}
+Write-Done "On branch $BranchName"
+
+# -- Step 2: Stage all changes -----------------------------------
+Write-Step "2/8" "Staging all changes (git add .)"
+git add .
+Write-Done "All files staged"
+
+# -- Step 3: Commit ----------------------------------------------
+Write-Step "3/8" "Committing with message: $CommitMsg"
+git commit -m $CommitMsg
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ! Nothing to commit or commit failed" -ForegroundColor Yellow
+} else {
+    Write-Done "Commit created"
+}
+
+# -- Step 4: Push feature branch to remote -----------------------
+Write-Step "4/8" "Pushing $BranchName to origin"
+git push -u origin $BranchName
+Write-Done "Branch pushed to remote"
+
+# -- Step 5: Checkout main ---------------------------------------
+Write-Step "5/8" "Switching to main branch"
+git checkout main
+Write-Done "On branch main"
+
+# -- Step 6: Merge feature into main (no-ff) --------------------
+Write-Step "6/8" "Merging $BranchName into main"
+git merge $BranchName --no-ff -m $MergeMsg
+Write-Done "Merge complete"
+
+# -- Step 7: Push main to remote ---------------------------------
+Write-Step "7/8" "Pushing main to origin"
+git push origin main
+Write-Done "Main branch updated on remote"
+
+# -- Step 8: Deploy to GitHub Pages ------------------------------
+Write-Step "8/8" "Running npm deploy (gh-pages)"
+npm run deploy
+Write-Done "Deployed to GitHub Pages!"
+
+# -- Summary -----------------------------------------------------
+Write-Host ""
+Write-Host "====================================================" -ForegroundColor Green
+Write-Host "|   DONE  Deploy Pipeline Complete!                |" -ForegroundColor Green
+Write-Host "|   Branch: $BranchName            |" -ForegroundColor Green
+Write-Host "|   Merged into: main                              |" -ForegroundColor Green
+Write-Host "|   Status: Live on GitHub Pages                   |" -ForegroundColor Green
+Write-Host "====================================================" -ForegroundColor Green

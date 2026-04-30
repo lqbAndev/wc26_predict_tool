@@ -64,6 +64,7 @@ function App() {
         coreState.groupMatches,
         coreState.knockoutMatches,
         derivedState.topScorers,
+        TEAMS,
       ),
     [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers],
   );
@@ -340,7 +341,7 @@ function App() {
 
           <section id="recap" className="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-[1640px]">
-              <TournamentRecap stats={recapStats} />
+              <TournamentRecap stats={recapStats} groupMatches={coreState.groupMatches} knockoutMatches={coreState.knockoutMatches} />
             </div>
           </section>
         </main>
