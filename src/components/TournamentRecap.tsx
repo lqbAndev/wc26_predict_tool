@@ -1,23 +1,30 @@
+import { useState } from 'react';
 import {
   Award,
   Flame,
   Goal,
   Medal,
   ShieldAlert,
+  ShieldCheck,
   ShieldPlus,
   Swords,
   Target,
+  ThumbsDown,
   TrendingUp,
   Trophy,
   Zap,
 } from 'lucide-react';
 import { ChampionCup, TriondaBall, WorldCupLogo } from './BrandAssets';
 import { Flag } from './Flag';
+import { PlayerProfileModal } from './PlayerProfileModal';
 import type { ScorerInfo, TournamentRecapStats } from '../utils/recapStats';
 import type { BestXIPlayer } from '../utils/bestXI';
+import type { GroupMatch, KnockoutMatch, KnockoutRound } from '../types/tournament';
 
 interface TournamentRecapProps {
   stats: TournamentRecapStats;
+  groupMatches: GroupMatch[];
+  knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>;
 }
 
 const StatCard = ({
@@ -28,6 +35,7 @@ const StatCard = ({
   accent = 'usa',
   flagTeam,
   flagTeams,
+  className = '',
 }: {
   icon: typeof Goal;
   label: string;
@@ -36,6 +44,7 @@ const StatCard = ({
   accent?: 'usa' | 'mexico' | 'canada' | 'neutral';
   flagTeam?: string;
   flagTeams?: [string, string];
+  className?: string;
 }) => {
   const borderMap = {
     usa: 'border-host-usa/22',
@@ -51,7 +60,7 @@ const StatCard = ({
   };
 
   return (
-    <div className={`rounded-[28px] border ${borderMap[accent]} ${bgMap[accent]} p-5 transition hover:scale-[1.02]`}>
+    <div className={`rounded-[28px] border ${borderMap[accent]} ${bgMap[accent]} p-5 transition hover:scale-[1.02] ${className}`}>
       <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-host-ice/55">
         <Icon className="h-4 w-4" /> {label}
       </div>
@@ -95,14 +104,20 @@ const SeasonMOTSCard = ({
 const BestXIPlayerCard = ({
   player,
   isBestPlayer,
+  onClick,
 }: {
   player: BestXIPlayer;
   isBestPlayer: boolean;
+  onClick: () => void;
 }) => (
   <article
-    className={`rounded-2xl border px-2 py-2 text-center transition ${isBestPlayer
-        ? 'border-amber-300/45 bg-amber-400/12 shadow-[0_0_22px_rgba(245,158,11,0.22)]'
-        : 'border-white/12 bg-white/[0.04]'
+    onClick={onClick}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+    className={`cursor-pointer rounded-2xl border px-2 py-2 text-center transition-all duration-200 hover:scale-[1.06] hover:shadow-[0_0_18px_rgba(255,255,255,0.08)] active:scale-[0.97] ${isBestPlayer
+      ? 'border-amber-300/45 bg-amber-400/12 shadow-[0_0_22px_rgba(245,158,11,0.22)] hover:border-amber-300/70 hover:shadow-[0_0_28px_rgba(245,158,11,0.35)]'
+      : 'border-white/12 bg-white/[0.04] hover:border-white/30 hover:bg-white/[0.08]'
       }`}
   >
     <div className="flex items-center justify-center gap-1.5">
@@ -113,20 +128,39 @@ const BestXIPlayerCard = ({
       {player.playerName}
     </p>
     <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-white/12 bg-black/20 px-2 py-0.5 text-[10px] text-white/75">
-      <span>G {player.goals}</span>
+      {player.lineupPosition === 'GK' ? (
+        <span>CS {player.cleanSheets}</span>
+      ) : (
+        <span>G {player.goals}</span>
+      )}
       <span>|</span>
       <span>M {player.motmCount}</span>
     </div>
+    <div className="mt-1 text-[9px] text-host-ice/35">Tap to view profile</div>
   </article>
 );
 
-const BestXISection = ({ stats }: { stats: TournamentRecapStats }) => {
+const BestXISection = ({
+  stats,
+  groupMatches,
+  knockoutMatches,
+}: {
+  stats: TournamentRecapStats;
+  groupMatches: GroupMatch[];
+  knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>;
+}) => {
+  const [selectedPlayer, setSelectedPlayer] = useState<BestXIPlayer | null>(null);
+
   if (!stats.isComplete || !stats.bestXI) {
     return null;
   }
 
   const { bestXI } = stats;
   const bestPlayer = bestXI.bestPlayer;
+
+  const handlePlayerClick = (player: BestXIPlayer) => {
+    setSelectedPlayer(player);
+  };
 
   return (
     <section className="brand-shell mt-6 overflow-hidden p-5 sm:p-6">
@@ -150,6 +184,7 @@ const BestXISection = ({ stats }: { stats: TournamentRecapStats }) => {
                   key={player.playerId}
                   player={player}
                   isBestPlayer={player.playerId === bestPlayer.playerId}
+                  onClick={() => handlePlayerClick(player)}
                 />
               ))}
             </div>
@@ -160,6 +195,7 @@ const BestXISection = ({ stats }: { stats: TournamentRecapStats }) => {
                   key={player.playerId}
                   player={player}
                   isBestPlayer={player.playerId === bestPlayer.playerId}
+                  onClick={() => handlePlayerClick(player)}
                 />
               ))}
             </div>
@@ -170,6 +206,7 @@ const BestXISection = ({ stats }: { stats: TournamentRecapStats }) => {
                   key={player.playerId}
                   player={player}
                   isBestPlayer={player.playerId === bestPlayer.playerId}
+                  onClick={() => handlePlayerClick(player)}
                 />
               ))}
             </div>
@@ -179,11 +216,23 @@ const BestXISection = ({ stats }: { stats: TournamentRecapStats }) => {
                 key={bestXI.goalkeeper.playerId}
                 player={bestXI.goalkeeper}
                 isBestPlayer={bestXI.goalkeeper.playerId === bestPlayer.playerId}
+                onClick={() => handlePlayerClick(bestXI.goalkeeper)}
               />
             </div>
           </div>
         </div>
       </div>
+
+      <PlayerProfileModal
+        isOpen={selectedPlayer !== null}
+        onClose={() => setSelectedPlayer(null)}
+        playerId={selectedPlayer?.playerId ?? ''}
+        teamId={selectedPlayer?.teamId ?? ''}
+        playerName={selectedPlayer?.playerName ?? ''}
+        position={selectedPlayer?.lineupPosition}
+        groupMatches={groupMatches}
+        knockoutMatches={knockoutMatches}
+      />
     </section>
   );
 };
@@ -215,8 +264,8 @@ const FeaturedMatchCard = ({
 }) => (
   <div
     className={`rounded-[28px] border p-5 transition hover:scale-[1.01] ${featured
-        ? 'border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-host-mexico/10 to-host-mexico/[0.03] shadow-[0_0_24px_rgba(245,158,11,0.08)] sm:p-6'
-        : 'border-white/10 bg-white/[0.04]'
+      ? 'border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-host-mexico/10 to-host-mexico/[0.03] shadow-[0_0_24px_rgba(245,158,11,0.08)] sm:p-6'
+      : 'border-white/10 bg-white/[0.04]'
       }`}
   >
     <div className="flex items-center justify-between">
@@ -342,7 +391,7 @@ const Podium = ({
   </div>
 );
 
-export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
+export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: TournamentRecapProps) => {
   if (!stats.isComplete) {
     return (
       <div className="brand-shell p-6 sm:p-8">
@@ -415,6 +464,22 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
             <div className="mt-2 text-sm text-white/55">Hoàn tất giải đấu để xác định.</div>
           </div>
         )}
+
+        {/* Golden Glove — next to MOTS */}
+        {stats.goldenGlove ? (
+          <div className="rounded-[28px] border border-sky-400/24 bg-sky-500/10 p-5 transition hover:scale-[1.02]">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-sky-300/70">
+              <ShieldCheck className="h-4 w-4" /> Găng tay vàng
+            </div>
+            <div className="mt-3 flex items-center gap-2.5">
+              <Flag teamName={stats.goldenGlove.teamName} size={26} />
+              <span className="truncate text-2xl font-black text-white">{stats.goldenGlove.playerName}</span>
+            </div>
+            <div className="mt-2 text-sm text-white/70">{stats.goldenGlove.teamName}</div>
+            <div className="mt-0.5 text-xs text-white/45">{stats.goldenGlove.cleanSheets} trận giữ sạch lưới</div>
+          </div>
+        ) : null}
+
         <StatCard
           icon={TrendingUp}
           label="Đội ghi nhiều nhất"
@@ -431,6 +496,37 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
           accent="canada"
           flagTeam={stats.mostConcededTeam?.teamName}
         />
+
+        {/* Cinderella Story */}
+        {stats.cinderella ? (
+          <div className="rounded-[28px] border border-emerald-400/24 bg-emerald-500/10 p-5 transition hover:scale-[1.02]">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-emerald-300/70">
+              <TrendingUp className="h-4 w-4" /> Ngựa ô giải đấu
+            </div>
+            <div className="mt-3 flex items-center gap-2.5">
+              <Flag teamName={stats.cinderella.teamName} size={26} />
+              <span className="truncate text-2xl font-black text-white">{stats.cinderella.teamName}</span>
+            </div>
+            <div className="mt-2 text-sm text-white/70">Hạng {stats.cinderella.rank}/48 đội — Vượt mọi kỳ vọng</div>
+            <div className="mt-0.5 text-xs text-white/45">{stats.cinderella.journey}</div>
+          </div>
+        ) : null}
+
+        {/* Biggest Flop */}
+        {stats.biggestFlop ? (
+          <div className="rounded-[28px] border border-red-400/24 bg-red-500/10 p-5 transition hover:scale-[1.02]">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-red-300/70">
+              <ThumbsDown className="h-4 w-4" /> Nỗi thất vọng lớn nhất
+            </div>
+            <div className="mt-3 flex items-center gap-2.5">
+              <Flag teamName={stats.biggestFlop.teamName} size={26} />
+              <span className="truncate text-2xl font-black text-white">{stats.biggestFlop.teamName}</span>
+            </div>
+            <div className="mt-2 text-sm text-white/70">Hạng {stats.biggestFlop.rank}/48 đội</div>
+            <div className="mt-0.5 text-xs text-white/45">Top 10 mạnh nhất nhưng bị loại từ vòng bảng</div>
+          </div>
+        ) : null}
+
         {stats.highestScoringMatch ? (
           <div className="sm:col-span-2">
             <StatCard
@@ -440,12 +536,13 @@ export const TournamentRecap = ({ stats }: TournamentRecapProps) => {
               sub={`${stats.highestScoringMatch.totalGoals} bàn · ${stats.highestScoringMatch.roundLabel}`}
               accent="mexico"
               flagTeams={[stats.highestScoringMatch.homeTeamName, stats.highestScoringMatch.awayTeamName]}
+              className="h-full"
             />
           </div>
         ) : null}
       </div>
 
-      <BestXISection stats={stats} />
+      <BestXISection stats={stats} groupMatches={groupMatches} knockoutMatches={knockoutMatches} />
 
       <div className="mt-6 space-y-4">
         <div className="flex items-center gap-2">

@@ -17,6 +17,7 @@ export interface BestXIPlayer {
   naturalPosition: BestXILineupPosition;
   lineupPosition: BestXILineupPosition;
   goals: number;
+  cleanSheets: number;
   motmCount: number;
   totalScore: number;
   knockoutImpact: number;
@@ -134,6 +135,7 @@ const buildPlayerRegistry = () => {
         naturalPosition: mapPositionToLineup(player.position),
         lineupPosition: mapPositionToLineup(player.position),
         goals: 0,
+        cleanSheets: 0,
         motmCount: 0,
         totalScore: 0,
         knockoutImpact: 0,
@@ -257,6 +259,31 @@ export const buildBestXI = (
 
       applyGoalScore(player, isKnockout, hasSemiFinalBonus);
     }
+
+    // Process clean sheets
+    if (match.homeScore === 0) {
+      const awayTeam = teamByName.get(match.awayTeamId ? TEAMS.find(t => t.id === match.awayTeamId)?.name ?? '' : '');
+      if (awayTeam) {
+        for (const p of awayTeam.players) {
+          if (p.position === 'GK') {
+            const player = registry.get(`${awayTeam.id}:${p.id}`);
+            if (player) player.cleanSheets += 1;
+          }
+        }
+      }
+    }
+    if (match.awayScore === 0) {
+      const homeTeam = teamByName.get(match.homeTeamId ? TEAMS.find(t => t.id === match.homeTeamId)?.name ?? '' : '');
+      if (homeTeam) {
+        for (const p of homeTeam.players) {
+          if (p.position === 'GK') {
+            const player = registry.get(`${homeTeam.id}:${p.id}`);
+            if (player) player.cleanSheets += 1;
+          }
+        }
+      }
+    }
+
 
     if (match.motm) {
       const motmTeam = teamByName.get(match.motm.teamName);
