@@ -7,6 +7,8 @@ import type {
   KnockoutTeamOrigin,
 } from '../types/tournament';
 import { Flag } from './Flag';
+import { PenaltyDetailsModal } from './PenaltyDetailsModal';
+import { TriondaBall } from './BrandAssets';
 
 interface KnockoutMatchCardProps {
   match: KnockoutMatch;
@@ -107,6 +109,7 @@ export const KnockoutMatchCard = ({
 
   // Scorer/timeline state
   const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [showPenaltyModal, setShowPenaltyModal] = useState(false);
   const hasTimeline = match.timeline && match.timeline.length > 0;
   const homeTimelineEvents = match.timeline?.filter((e) => e.side === 'home') ?? [];
   const awayTimelineEvents = match.timeline?.filter((e) => e.side === 'away') ?? [];
@@ -195,8 +198,15 @@ export const KnockoutMatchCard = ({
           ) : null}
 
           {match.penalty ? (
-            <span className="rounded-full border border-host-mexico/24 bg-host-mexico/10 px-2.5 py-1 text-host-ice">
-              Penalty {match.penalty.home}-{match.penalty.away}
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={() => setShowPenaltyModal(true)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPenaltyModal(true); }}
+              title="Xem chi tiết luân lưu"
+              className="cursor-pointer rounded-full border border-host-mexico/24 bg-host-mexico/10 px-2.5 py-1 text-host-ice transition hover:border-host-mexico/50 hover:bg-host-mexico/20 hover:underline"
+            >
+              Penalty {match.penalty.home}-{match.penalty.away} ↗
             </span>
           ) : null}
 
@@ -249,7 +259,8 @@ export const KnockoutMatchCard = ({
                   <div className="mt-1.5 space-y-0.5">
                     {homeTimelineEvents.length > 0 ? (
                       homeTimelineEvents.map((event, idx) => (
-                        <div key={idx} className="flex items-baseline gap-1.5 text-[12px] text-white/75">
+                        <div key={idx} className="flex items-center gap-1.5 text-[12px] text-white/75">
+                          <TriondaBall size={12} />
                           <span className="shrink-0 font-mono text-[10px] text-emerald-300/45">
                             {event.displayMinute}
                           </span>
@@ -273,7 +284,8 @@ export const KnockoutMatchCard = ({
                   <div className="mt-1.5 space-y-0.5">
                     {awayTimelineEvents.length > 0 ? (
                       awayTimelineEvents.map((event, idx) => (
-                        <div key={idx} className="flex items-baseline gap-1.5 text-[12px] text-white/75">
+                        <div key={idx} className="flex items-center gap-1.5 text-[12px] text-white/75">
+                          <TriondaBall size={12} />
                           <span className="shrink-0 font-mono text-[10px] text-cyan-300/45">
                             {event.displayMinute}
                           </span>
@@ -355,6 +367,14 @@ export const KnockoutMatchCard = ({
           {actionLabel}
         </button>
       ) : null}
+
+      {showPenaltyModal && (
+        <PenaltyDetailsModal
+          match={match}
+          isOpen={showPenaltyModal}
+          onClose={() => setShowPenaltyModal(false)}
+        />
+      )}
     </article>
   );
 };

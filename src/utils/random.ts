@@ -3,9 +3,11 @@ import type {
   KnockoutMatch,
   MatchScorers,
   PenaltyShootout,
+  PenaltyShootoutKick,
   PlayerProfile,
   Team,
   TimelineEvent,
+  TournamentScenario,
 } from '../types/tournament';
 import { computeMatchMOTM } from './motm';
 
@@ -59,35 +61,46 @@ const sampleBaseGoals = () =>
     { value: 10, weight: 0.05 },
   ]);
 
-const applyRatingBias = (goals: number, ratingDifference: number) => {
+/**
+ * Applies scenario-aware rating bias to a base goal count.
+ *
+ * Standard  – use rating diff as-is, moderate natural advantage.
+ * Favorites – amplify diff ×2.0 → stronger team wins ~80% of the time.
+ * Underdogs – INVERT and scale diff ×1.5 → weaker team gets the edge,
+ *             winning ~80% of the time instead.
+ */
+const applyRatingBias = (
+  goals: number,
+  ratingDifference: number,
+  scenario: TournamentScenario = 'standard',
+) => {
   let adjusted = goals;
-  const magnitude = Math.abs(ratingDifference);
+  let effectiveDiff = ratingDifference;
+
+  if (scenario === 'favorites') {
+    // Double the gap — stronger team wins decisively (~80%)
+    effectiveDiff = ratingDifference * 2.0;
+  } else if (scenario === 'underdogs') {
+    // Invert and amplify — weaker team gets strong advantage (~80%)
+    effectiveDiff = -ratingDifference * 1.5;
+  }
+
+  const magnitude = Math.abs(effectiveDiff);
   const positiveBias = Math.min(0.55, magnitude / 32);
   const negativeBias = Math.min(0.45, magnitude / 34);
 
-  if (ratingDifference >= 8 && Math.random() < positiveBias) {
-    adjusted += 1;
-  }
-
-  if (ratingDifference >= 15 && Math.random() < 0.18) {
-    adjusted += 1;
-  }
-
-  if (ratingDifference <= -8 && adjusted > 0 && Math.random() < negativeBias) {
-    adjusted -= 1;
-  }
+  if (effectiveDiff >= 8 && Math.random() < positiveBias) adjusted += 1;
+  if (effectiveDiff >= 15 && Math.random() < 0.18) adjusted += 1;
+  if (effectiveDiff <= -8 && adjusted > 0 && Math.random() < negativeBias) adjusted -= 1;
 
   return clamp(adjusted, 0, 10);
 };
 
-const generateScoreline = (homeTeam: Team, awayTeam: Team) => {
-  const homeGoals = applyRatingBias(sampleBaseGoals(), homeTeam.rating - awayTeam.rating);
-  const awayGoals = applyRatingBias(sampleBaseGoals(), awayTeam.rating - homeTeam.rating);
+const generateScoreline = (homeTeam: Team, awayTeam: Team, scenario: TournamentScenario = 'standard') => {
+  const homeGoals = applyRatingBias(sampleBaseGoals(), homeTeam.rating - awayTeam.rating, scenario);
+  const awayGoals = applyRatingBias(sampleBaseGoals(), awayTeam.rating - homeTeam.rating, scenario);
 
-  return {
-    homeGoals,
-    awayGoals,
-  };
+  return { homeGoals, awayGoals };
 };
 
 const playerWeight = (player: PlayerProfile) => {
@@ -396,8 +409,13 @@ const buildKnockoutTimeline = (
 
 /* ═══════════════════ PUBLIC SIMULATORS ═══════════════════ */
 
-export const simulateGroupMatch = (match: GroupMatch, homeTeam: Team, awayTeam: Team): GroupMatch => {
-  const { homeGoals, awayGoals } = generateScoreline(homeTeam, awayTeam);
+export const simulateGroupMatch = (
+  match: GroupMatch,
+  homeTeam: Team,
+  awayTeam: Team,
+  scenario: TournamentScenario = 'standard',
+): GroupMatch => {
+  const { homeGoals, awayGoals } = generateScoreline(homeTeam, awayTeam, scenario);
   const { scorers, timeline } = buildRegulationTimeline(homeTeam, awayTeam, homeGoals, awayGoals);
 
   const completedMatch: GroupMatch = {
@@ -421,8 +439,9 @@ export const simulateKnockoutRegulation = (
   match: KnockoutMatch,
   homeTeam: Team,
   awayTeam: Team,
+  scenario: TournamentScenario = 'standard',
 ): KnockoutMatch => {
-  const regulation = generateScoreline(homeTeam, awayTeam);
+  const regulation = generateScoreline(homeTeam, awayTeam, scenario);
   let extraTimeHomeGoals = 0;
   let extraTimeAwayGoals = 0;
   let extraTimeHomeScore: number | null = null;
@@ -504,89 +523,81 @@ const generateExtraTimeScoreline = (homeTeam: Team, awayTeam: Team) => ({
   awayGoals: applyExtraTimeBias(sampleExtraTimeBaseGoals(), awayTeam.rating - homeTeam.rating),
 });
 
-export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): PenaltyShootout => {
+export interface PenaltyShootoutResult {
+  home: number;
+  away: number;
+  timeline: PenaltyShootoutKick[];
+}
+
+export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): PenaltyShootoutResult => {
+  const homePlayers = homeTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF');
+  const awayPlayers = awayTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF');
+  // Fallback to all players if not enough FW/MF
+  const homePool = homePlayers.length >= 3 ? homePlayers : homeTeam.players;
+  const awayPool = awayPlayers.length >= 3 ? awayPlayers : awayTeam.players;
+
+  const pickPlayer = (pool: typeof homePool, usedIndex: number) =>
+    pool[usedIndex % pool.length];
+
   const getKickConversionRate = (team: Team, opponent: Team) =>
     clamp(0.72 + (team.rating - opponent.rating) * 0.006, 0.64, 0.86);
 
   const hasDecisiveLead = (home: number, away: number, homeKicks: number, awayKicks: number) => {
-    const remainingHome = 5 - homeKicks;
-    const remainingAway = 5 - awayKicks;
+    const remainingHome = Math.max(0, 5 - homeKicks);
+    const remainingAway = Math.max(0, 5 - awayKicks);
 
     return home > away + remainingAway || away > home + remainingHome;
   };
 
-  const isAcceptedScoreline = (home: number, away: number) => {
-    const winner = Math.max(home, away);
-    const loser = Math.min(home, away);
-
-    if (winner === loser) {
-      return false;
-    }
-
-    if (winner === 3 && loser === 0) {
-      return true;
-    }
-
-    if (winner === 4 && (loser === 2 || loser === 3)) {
-      return true;
-    }
-
-    if (winner === 5 && (loser === 3 || loser === 4)) {
-      return true;
-    }
-
-    return winner >= 6 && winner === loser + 1;
-  };
-
-  const simulateSingleShootout = () => {
+  const simulateSingleShootout = (): PenaltyShootoutResult | null => {
     let home = 0;
     let away = 0;
     let homeKicks = 0;
     let awayKicks = 0;
     const homeFirst = Math.random() < 0.5;
+    const kicks: PenaltyShootoutKick[] = [];
 
     const takeKick = (side: 'home' | 'away') => {
-      const scored =
-        side === 'home'
-          ? Math.random() < getKickConversionRate(homeTeam, awayTeam)
-          : Math.random() < getKickConversionRate(awayTeam, homeTeam);
+      const team = side === 'home' ? homeTeam : awayTeam;
+      const opponent = side === 'home' ? awayTeam : homeTeam;
+      const pool = side === 'home' ? homePool : awayPool;
+      const kickIndex = side === 'home' ? homeKicks : awayKicks;
+      const player = pickPlayer(pool, kickIndex);
+      const scored = Math.random() < getKickConversionRate(team, opponent);
+
+      kicks.push({ teamId: team.id, playerName: player.name, scored, side });
 
       if (side === 'home') {
         homeKicks += 1;
-        if (scored) {
-          home += 1;
-        }
-        return;
-      }
-
-      awayKicks += 1;
-      if (scored) {
-        away += 1;
+        if (scored) home += 1;
+      } else {
+        awayKicks += 1;
+        if (scored) away += 1;
       }
     };
 
     for (let round = 0; round < 5; round += 1) {
       takeKick(homeFirst ? 'home' : 'away');
       if (hasDecisiveLead(home, away, homeKicks, awayKicks)) {
-        return { home, away };
+        return { home, away, timeline: kicks };
       }
 
       takeKick(homeFirst ? 'away' : 'home');
       if (hasDecisiveLead(home, away, homeKicks, awayKicks)) {
-        return { home, away };
+        return { home, away, timeline: kicks };
       }
     }
 
     if (home !== away) {
-      return { home, away };
+      return { home, away, timeline: kicks };
     }
 
-    for (let suddenDeathRound = 0; suddenDeathRound < 5; suddenDeathRound += 1) {
+    for (let suddenDeathRound = 0; suddenDeathRound < 15; suddenDeathRound += 1) {
       takeKick(homeFirst ? 'home' : 'away');
       takeKick(homeFirst ? 'away' : 'home');
 
       if (home !== away) {
-        return { home, away };
+        return { home, away, timeline: kicks };
       }
     }
 
@@ -596,11 +607,14 @@ export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): Penalty
   for (let attempt = 0; attempt < 200; attempt += 1) {
     const result = simulateSingleShootout();
 
-    if (result && isAcceptedScoreline(result.home, result.away)) {
+    // Any valid result from simulateSingleShootout is mathematically correct in football.
+    // Removed old isAcceptedScoreline so we don't accidentally fallback and lose timeline data.
+    if (result && result.home !== result.away) {
       return result;
     }
   }
 
+  // Fallback (giữ nguyên độ đa dạng như cũ theo yêu cầu)
   const homeWins = Math.random() < clamp(0.5 + (homeTeam.rating - awayTeam.rating) / 80, 0.35, 0.65);
   const fallback = weightedPick([
     { value: { win: 3, lose: 0 }, weight: 10 },
@@ -613,6 +627,6 @@ export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): Penalty
   ]);
 
   return homeWins
-    ? { home: fallback.win, away: fallback.lose }
-    : { home: fallback.lose, away: fallback.win };
+    ? { home: fallback.win, away: fallback.lose, timeline: [] }
+    : { home: fallback.lose, away: fallback.win, timeline: [] };
 };

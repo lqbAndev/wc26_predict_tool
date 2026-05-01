@@ -396,6 +396,7 @@ export const createInitialTournamentCoreState = (): TournamentCoreState => ({
   groupMatches: createInitialGroupMatches(),
   knockoutVisible: false,
   knockoutMatches: createEmptyKnockoutMatches(),
+  scenario: 'standard',
 });
 
 export { GROUP_IDS, KNOCKOUT_ROUNDS };

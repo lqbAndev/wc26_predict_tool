@@ -3,6 +3,7 @@ import { ChevronDown, Clock } from 'lucide-react';
 import { TEAMS_BY_ID } from '../data/tournament';
 import type { GroupMatch } from '../types/tournament';
 import { Flag } from './Flag';
+import { TriondaBall } from './BrandAssets';
 
 interface MatchCardProps {
   match: GroupMatch;
@@ -96,7 +97,8 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
                 <div className="mt-2 space-y-1">
                   {homeEvents.length > 0 ? (
                     homeEvents.map((event, idx) => (
-                      <div key={idx} className="flex items-baseline gap-2 text-sm text-white/80">
+                      <div key={idx} className="flex items-center gap-2 text-sm text-white/80">
+                        <TriondaBall size={14} />
                         <span className="shrink-0 font-mono text-[14px] text-emerald-300/70">
                           {event.displayMinute}
                         </span>
@@ -120,7 +122,8 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
                 <div className="mt-2 space-y-1">
                   {awayEvents.length > 0 ? (
                     awayEvents.map((event, idx) => (
-                      <div key={idx} className="flex items-baseline gap-2 text-sm text-white/80">
+                      <div key={idx} className="flex items-center gap-2 text-sm text-white/80">
+                        <TriondaBall size={14} />
                         <span className="shrink-0 font-mono text-[14px] text-cyan-300/70">
                           {event.displayMinute}
                         </span>

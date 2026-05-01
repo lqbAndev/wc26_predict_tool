@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, GitCompareArrows, Orbit, RotateCcw, Swords, Trophy, Users } from 'lucide-react';
+import { CalendarDays, ChevronDown, GitCompareArrows, Orbit, RotateCcw, Swords, Trophy, Users, Zap } from 'lucide-react';
 import { BackToTopButton } from './components/BackToTopButton';
 import { BestThirdTable } from './components/BestThirdTable';
 import { ChampionCup, TriondaBall, WorldCupLogo } from './components/BrandAssets';
@@ -32,6 +32,7 @@ function App() {
     predictKnockoutMatch,
     resolvePenalty,
     resetTournament,
+    setScenario,
   } = useTournament();
 
   const [showResetModal, setShowResetModal] = useState(false);
@@ -40,7 +41,9 @@ function App() {
   const [compareTeamAId, setCompareTeamAId] = useState('');
   const [compareTeamBId, setCompareTeamBId] = useState('');
   const [compareRequested, setCompareRequested] = useState(false);
+  const [scenarioOpen, setScenarioOpen] = useState(false);
   const prevChampionRef = useRef<string | null>(null);
+  const scenarioRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (derivedState.championName && !prevChampionRef.current) {
@@ -49,6 +52,24 @@ function App() {
 
     prevChampionRef.current = derivedState.championName;
   }, [derivedState.championName]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (scenarioRef.current && !scenarioRef.current.contains(e.target as Node)) {
+        setScenarioOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const SCENARIO_OPTIONS = [
+    { value: 'standard' as const, label: 'Tiêu chuẩn', desc: 'Kết quả theo tỷ lệ thực tế' },
+    { value: 'favorites' as const, label: 'Cuộc chơi Kẻ mạnh', desc: 'Đội mạnh chiếm ~80% lợi thế' },
+    { value: 'underdogs' as const, label: 'Lễ hội Ngựa ô', desc: 'Đội yếu có ~80% cơ hội đảo ngược' },
+  ];
+  const activeScenario = coreState.scenario ?? 'standard';
+  const currentOption = SCENARIO_OPTIONS.find((o) => o.value === activeScenario) ?? SCENARIO_OPTIONS[0];
 
   const completedGroupMatches = coreState.groupMatches.filter((match) => match.status === 'completed').length;
   const totalGroupMatches = coreState.groupMatches.length;
@@ -257,8 +278,49 @@ function App() {
                 <h2 className="mt-2 text-3xl font-bold text-white">12 bảng đấu từ A đến L</h2>
               </div>
 
-              <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/65">
-                Bảng xếp hạng cập nhật sau mỗi lần bấm Dự đoán
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Scenario Dropdown */}
+                <div ref={scenarioRef} className="relative">
+                  <button
+                    type="button"
+                    id="scenario-trigger"
+                    onClick={() => setScenarioOpen((v) => !v)}
+                    className="flex items-center gap-2.5 rounded-2xl border border-amber-400/20 bg-amber-400/8 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:border-amber-400/35 hover:bg-amber-400/14 active:scale-[0.98]"
+                  >
+                    <Zap className="h-4 w-4 shrink-0 text-amber-300/80" />
+                    <span className="whitespace-nowrap">{currentOption.label}</span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-white/45 transition-transform duration-200 ${scenarioOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {scenarioOpen && (
+                    <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(10,17,32,0.97)] shadow-[0_8px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+                      {SCENARIO_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => { setScenario(opt.value); setScenarioOpen(false); }}
+                          className={`flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/[0.06] ${
+                            opt.value === activeScenario ? 'bg-amber-400/[0.07]' : ''
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <div className={`text-sm font-semibold ${
+                              opt.value === activeScenario ? 'text-amber-300' : 'text-white'
+                            }`}>{opt.label}</div>
+                            <div className="mt-0.5 text-[11px] text-white/40">{opt.desc}</div>
+                          </div>
+                          {opt.value === activeScenario && (
+                            <span className="ml-auto mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-400" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/65">
+                  Bảng xếp hạng cập nhật sau mỗi lần bấm Dự đoán
+                </div>
               </div>
             </div>
 

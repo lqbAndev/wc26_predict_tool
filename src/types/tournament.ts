@@ -12,6 +12,7 @@ export const KNOCKOUT_ROUNDS = [
 export type KnockoutRound = (typeof KNOCKOUT_ROUNDS)[number];
 
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
+export type TournamentScenario = 'standard' | 'favorites' | 'underdogs';
 export type KnockoutMatchStatus = 'pending' | 'awaiting-penalties' | 'completed';
 
 export interface PlayerProfile {
@@ -134,6 +135,7 @@ export interface KnockoutMatch {
   timeline: TimelineEvent[] | null;
   motm: MatchMOTM | null;
   penalty: PenaltyShootout | null;
+  penaltyTimeline?: PenaltyShootoutKick[];
   status: KnockoutMatchStatus;
   winnerTeamId: string | null;
   loserTeamId: string | null;
@@ -179,6 +181,7 @@ export interface TournamentCoreState {
   groupMatches: GroupMatch[];
   knockoutVisible: boolean;
   knockoutMatches: Record<KnockoutRound, KnockoutMatch[]>;
+  scenario: TournamentScenario;
 }
 
 export interface TournamentDerivedState {

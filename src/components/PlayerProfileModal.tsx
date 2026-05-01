@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Award, Goal, Star, Trophy, User, X, Shield } from 'lucide-react';
+import { Award, Star, Trophy, User, X, Shield } from 'lucide-react';
 import { ROUND_LABELS, TEAMS_BY_ID } from '../data/tournament';
 import type {
   GroupMatch,
@@ -7,6 +7,7 @@ import type {
   KnockoutRound,
 } from '../types/tournament';
 import { Flag } from './Flag';
+import { TriondaBall } from './BrandAssets';
 
 interface PlayerProfileModalProps {
   isOpen: boolean;
@@ -183,8 +184,7 @@ const TypeBadge = ({ type }: { type: TimelineEntry['type'] }) => {
   const config = {
     goal: {
       bg: 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300',
-      icon: <Goal className="h-3 w-3" />,
-      label: 'Bàn thắng',
+      label: 'Ghi bàn',
     },
     motm: {
       bg: 'bg-amber-500/20 border-amber-400/30 text-amber-300',
@@ -194,7 +194,7 @@ const TypeBadge = ({ type }: { type: TimelineEntry['type'] }) => {
     both: {
       bg: 'bg-host-mexico/20 border-host-mexico/30 text-host-ice',
       icon: <Trophy className="h-3 w-3" />,
-      label: 'Bàn + MOTM',
+      label: 'Ghi bàn & MOTM',
     },
     cleansheet: {
       bg: 'bg-sky-500/20 border-sky-400/30 text-sky-300',
@@ -246,24 +246,24 @@ export const PlayerProfileModal = ({
       />
 
       {/* Modal — bottom-sheet on mobile, centered on desktop */}
-      <div className="relative mx-auto flex max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-[28px] border border-white/15 bg-[#08131f] shadow-[0_-8px_40px_rgba(0,0,0,0.6)] sm:max-h-[80vh] sm:w-[min(520px,92vw)] sm:rounded-[28px] sm:shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
+      <div className="relative mx-auto flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-[32px] border-t border-white/10 bg-[#08131f] shadow-[0_-12px_40px_rgba(0,0,0,0.5)] sm:max-h-[80vh] sm:w-[min(520px,92vw)] sm:rounded-[28px] sm:border sm:border-white/15 sm:shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
         {/* Decorative gradient */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.08),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.06),transparent_50%)]" />
 
         {/* Mobile drag handle */}
-        <div className="flex shrink-0 justify-center pt-3 sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-white/20" />
+        <div className="flex shrink-0 justify-center pt-3 pb-1 sm:hidden">
+          <div className="h-1.5 w-12 rounded-full bg-white/20" />
         </div>
 
         {/* Header */}
-        <div className="relative flex shrink-0 items-start justify-between gap-3 px-5 pb-4 pt-4 sm:px-6 sm:pt-6">
+        <div className="relative flex shrink-0 items-start justify-between gap-3 px-5 pb-4 pt-2 sm:px-6 sm:pt-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-white/[0.06]">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-white/[0.06]">
               <Flag teamName={teamName} size={48} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">{playerName}</h3>
-              <div className="mt-0.5 text-sm text-white/60">
+              <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">{playerName}</h3>
+              <div className="mt-0.5 text-[13px] sm:text-sm text-white/60">
                 {teamName}
               </div>
             </div>
@@ -271,31 +271,31 @@ export const PlayerProfileModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+            className="inline-flex items-center justify-center rounded-full sm:rounded-xl border border-white/10 bg-white/[0.04] p-2 sm:p-2.5 text-white/70 transition hover:bg-white/[0.08] hover:text-white"
             aria-label="Đóng hồ sơ cầu thủ"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
         {/* Stat badges */}
         <div className="relative flex gap-3 px-5 sm:px-6">
-          <div className={`flex-1 rounded-2xl border px-4 py-3 text-center ${isGK ? 'border-sky-400/20 bg-sky-500/10' : 'border-emerald-400/20 bg-emerald-500/10'}`}>
+          <div className={`flex-1 rounded-2xl border px-3 py-3 sm:px-4 text-center ${isGK ? 'border-sky-400/20 bg-sky-500/10' : 'border-emerald-400/20 bg-emerald-500/10'}`}>
             <div className={`text-[10px] uppercase tracking-[0.2em] ${isGK ? 'text-sky-300/70' : 'text-emerald-300/70'}`}>
               {isGK ? 'Sạch lưới' : 'Bàn thắng'}
             </div>
-            <div className="mt-1 text-3xl font-black text-white">{totalGoalsOrCleanSheets}</div>
+            <div className="mt-1 text-2xl sm:text-3xl font-black text-white">{totalGoalsOrCleanSheets}</div>
           </div>
-          <div className="flex-1 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-center">
+          <div className="flex-1 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-3 py-3 sm:px-4 text-center">
             <div className="text-[10px] uppercase tracking-[0.2em] text-amber-300/70">
               MOTM
             </div>
-            <div className="mt-1 text-3xl font-black text-white">{totalMotm}</div>
+            <div className="mt-1 text-2xl sm:text-3xl font-black text-white">{totalMotm}</div>
           </div>
         </div>
 
         {/* Timeline */}
-        <div className="relative mt-4 flex-1 overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
+        <div className="relative mt-4 flex-1 overflow-y-auto px-5 pb-8 sm:px-6 sm:pb-6 overscroll-contain">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-host-ice/55">
             <Award className="h-4 w-4" />
             Hành trình giải đấu
@@ -312,7 +312,7 @@ export const PlayerProfileModal = ({
                   {/* Dot */}
                   <div className="relative z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/15 bg-[#0b1a2a]">
                     {entry.type === 'goal' ? (
-                      <Goal className="h-3 w-3 text-emerald-400" />
+                      <TriondaBall size={14} />
                     ) : entry.type === 'cleansheet' ? (
                       <Shield className="h-3 w-3 text-sky-400" />
                     ) : entry.type === 'motm' ? (
@@ -324,9 +324,9 @@ export const PlayerProfileModal = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <TypeBadge type={entry.type} />
-                      <span className="text-[11px] text-white/40">{entry.roundLabel}</span>
+                      <span className="text-[10px] sm:text-[11px] text-white/40">{entry.roundLabel}</span>
                     </div>
-                    <p className="mt-1 text-[13px] font-medium text-white/85">
+                    <p className="mt-1.5 text-xs sm:text-[13px] font-medium text-white/85 leading-relaxed">
                       {entry.description}
                     </p>
                   </div>

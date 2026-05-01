@@ -10,6 +10,7 @@ import type {
   PersistedTournamentState,
   TournamentCoreState,
   TournamentDerivedState,
+  TournamentScenario,
 } from '../types/tournament';
 import {
   STORAGE_VERSION,
@@ -78,7 +79,8 @@ const getInitialCoreState = (): TournamentCoreState => {
     return createInitialTournamentCoreState();
   }
 
-  return normalizeCoreState(persisted.core);
+  const base = normalizeCoreState(persisted.core);
+  return { ...base, scenario: base.scenario ?? 'standard' };
 };
 
 const hasInitializedKnockout = (state: TournamentCoreState) =>
@@ -126,7 +128,12 @@ export const useTournament = () => {
           return match;
         }
 
-        return simulateGroupMatch(match, TEAMS_BY_ID[match.homeTeamId], TEAMS_BY_ID[match.awayTeamId]);
+        return simulateGroupMatch(
+          match,
+          TEAMS_BY_ID[match.homeTeamId],
+          TEAMS_BY_ID[match.awayTeamId],
+          currentState.scenario ?? 'standard',
+        );
       }),
     }));
   };
@@ -172,6 +179,7 @@ export const useTournament = () => {
         targetMatch,
         TEAMS_BY_ID[targetMatch.homeTeamId],
         TEAMS_BY_ID[targetMatch.awayTeamId],
+        currentState.scenario ?? 'standard',
       );
 
       let nextKnockoutState: TournamentCoreState['knockoutMatches'] = {
@@ -210,15 +218,17 @@ export const useTournament = () => {
         return currentState;
       }
 
-      const penalty = simulatePenaltyShootout(
+      const penaltyResult = simulatePenaltyShootout(
         TEAMS_BY_ID[targetMatch.homeTeamId],
         TEAMS_BY_ID[targetMatch.awayTeamId],
       );
+      const penalty: import('../types/tournament').PenaltyShootout = { home: penaltyResult.home, away: penaltyResult.away };
       const winnerTeamId = penalty.home > penalty.away ? targetMatch.homeTeamId : targetMatch.awayTeamId;
       const loserTeamId = winnerTeamId === targetMatch.homeTeamId ? targetMatch.awayTeamId : targetMatch.homeTeamId;
       const completedMatch: typeof targetMatch = {
         ...targetMatch,
         penalty,
+        penaltyTimeline: penaltyResult.timeline,
         motm: null,
         status: 'completed' as const,
         winnerTeamId,
@@ -256,6 +266,10 @@ export const useTournament = () => {
     });
   };
 
+  const setScenario = (scenario: TournamentScenario) => {
+    setCoreState((prev) => ({ ...prev, scenario }));
+  };
+
   return {
     coreState,
     derivedState,
@@ -264,5 +278,6 @@ export const useTournament = () => {
     predictKnockoutMatch,
     resolvePenalty,
     resetTournament,
+    setScenario,
   };
 };

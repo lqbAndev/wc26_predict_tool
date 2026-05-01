@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Award,
   Flame,
-  Goal,
   Medal,
   ShieldAlert,
   ShieldCheck,
@@ -28,7 +27,6 @@ interface TournamentRecapProps {
 }
 
 const StatCard = ({
-  icon: Icon,
   label,
   value,
   sub,
@@ -37,7 +35,6 @@ const StatCard = ({
   flagTeams,
   className = '',
 }: {
-  icon: typeof Goal;
   label: string;
   value: string | number;
   sub?: string;
@@ -58,11 +55,17 @@ const StatCard = ({
     canada: 'bg-host-canada/12',
     neutral: 'bg-white/[0.06]',
   };
+  const labelColorMap = {
+    usa: 'text-sky-300/80',
+    mexico: 'text-host-mexico/80',
+    canada: 'text-host-canada/80',
+    neutral: 'text-host-ice/65',
+  };
 
   return (
     <div className={`rounded-[28px] border ${borderMap[accent]} ${bgMap[accent]} p-5 transition hover:scale-[1.02] ${className}`}>
-      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-host-ice/55">
-        <Icon className="h-4 w-4" /> {label}
+      <div className={`text-xs font-bold uppercase tracking-[0.22em] ${labelColorMap[accent]}`}>
+        {label}
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -438,11 +441,10 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Goal} label="Tổng bàn thắng" value={stats.totalGoals} sub={`${stats.goalsPerMatch} bàn/trận`} accent="usa" />
-        <StatCard icon={Swords} label="Tổng trận đấu" value={stats.totalMatches} sub="Trận đã hoàn tất" accent="mexico" />
-        <StatCard icon={Zap} label="Penalty Shootout" value={stats.totalPenaltyMatches} sub="Trận phân thắng bại luân lưu" accent="canada" />
+        <StatCard label="Tổng bàn thắng" value={stats.totalGoals} sub={`${stats.goalsPerMatch} bàn/trận`} accent="usa" />
+        <StatCard label="Tổng trận đấu" value={stats.totalMatches} sub="Trận đã hoàn tất" accent="mexico" />
+        <StatCard label="Penalty Shootout" value={stats.totalPenaltyMatches} sub="Trận phân thắng bại luân lưu" accent="canada" />
         <StatCard
-          icon={Target}
           label="Vua phá lưới"
           value={stats.topScorer ? stats.topScorer.playerName : '--'}
           sub={stats.topScorer ? `${stats.topScorer.goals} bàn · ${stats.topScorer.teamName}` : undefined}
@@ -481,7 +483,6 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         ) : null}
 
         <StatCard
-          icon={TrendingUp}
           label="Đội ghi nhiều nhất"
           value={stats.mostGoalsTeam?.teamName ?? '--'}
           sub={stats.mostGoalsTeam ? `${stats.mostGoalsTeam.goals} bàn` : undefined}
@@ -489,7 +490,6 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
           flagTeam={stats.mostGoalsTeam?.teamName}
         />
         <StatCard
-          icon={ShieldAlert}
           label="Đội thủng lưới nhiều nhất"
           value={stats.mostConcededTeam?.teamName ?? '--'}
           sub={stats.mostConcededTeam ? `${stats.mostConcededTeam.goals} bàn` : undefined}
@@ -530,7 +530,6 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         {stats.highestScoringMatch ? (
           <div className="sm:col-span-2">
             <StatCard
-              icon={TrendingUp}
               label="Trận nhiều bàn nhất"
               value={`${stats.highestScoringMatch.homeTeamName} ${stats.highestScoringMatch.homeScore} - ${stats.highestScoringMatch.awayScore} ${stats.highestScoringMatch.awayTeamName}`}
               sub={`${stats.highestScoringMatch.totalGoals} bàn · ${stats.highestScoringMatch.roundLabel}`}
