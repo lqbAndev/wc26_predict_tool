@@ -315,16 +315,62 @@ export const buildBestXI = (
     return null;
   }
 
+  // ── Step 1: Lock in the Golden Glove GK (most clean sheets) ──────────
+  // Tie-break: more clean sheets first; then higher totalScore.
+  const allGKs = sortedPool.filter(p => p.naturalPosition === 'GK');
+  const goldenGloveGK = allGKs.reduce<MutableBestXIPlayer | null>((best, p) => {
+    if (!best) return p;
+    if (p.cleanSheets > best.cleanSheets) return p;
+    if (p.cleanSheets === best.cleanSheets && p.totalScore > best.totalScore) return p;
+    return best;
+  }, null);
+
+  // ── Step 2: Lock in the Top Scorer (most goals) in ATT slot ──────────
+  // Only lock if they actually scored (goals > 0); otherwise fall back to normal selection.
+  const topScorer = sortedPool.reduce<MutableBestXIPlayer | null>((best, p) => {
+    if (!best) return p;
+    if (p.goals > best.goals) return p;
+    if (p.goals === best.goals && p.totalScore > best.totalScore) return p;
+    return best;
+  }, null);
+
+  // ── Step 3: Build the XI, injecting locked players first ─────────────
   const selectedIds = new Set<string>();
-  const [goalkeeper] = selectByPosition(sortedPool, selectedIds, 'GK', 1);
+
+  // Force Golden Glove GK into the GK slot
+  let goalkeeper: BestXIPlayer;
+  if (goldenGloveGK) {
+    selectedIds.add(goldenGloveGK.playerId);
+    goalkeeper = { ...goldenGloveGK, lineupPosition: 'GK' };
+  } else {
+    const [fallbackGK] = selectByPosition(sortedPool, selectedIds, 'GK', 1);
+    if (!fallbackGK) return null;
+    goalkeeper = fallbackGK;
+  }
+
+  // Force Top Scorer into one of the 3 ATT slots regardless of natural position
+  let lockedAttacker: BestXIPlayer | null = null;
+  if (topScorer && topScorer.goals > 0) {
+    selectedIds.add(topScorer.playerId);
+    lockedAttacker = { ...topScorer, lineupPosition: 'ATT' };
+  }
+
+  // Fill DEF × 4 and MID × 3 by totalScore (locked players already excluded)
   const defenders = selectByPosition(sortedPool, selectedIds, 'DEF', 4);
   const midfielders = selectByPosition(sortedPool, selectedIds, 'MID', 3);
-  const attackers = selectByPosition(sortedPool, selectedIds, 'ATT', 3);
+
+  // Fill the remaining ATT slots (3 total; 1 may already be the locked top scorer)
+  const remainingATTCount = lockedAttacker ? 2 : 3;
+  const remainingAttackers = selectByPosition(sortedPool, selectedIds, 'ATT', remainingATTCount);
+  const attackers = lockedAttacker
+    ? [lockedAttacker, ...remainingAttackers]
+    : remainingAttackers;
 
   if (!goalkeeper || defenders.length !== 4 || midfielders.length !== 3 || attackers.length !== 3) {
     return null;
   }
 
+  // MOTS = highest totalScore across all 11 (computed after full lineup is set)
   const fullXI = [goalkeeper, ...defenders, ...midfielders, ...attackers].sort(comparePlayers);
   const bestPlayer = fullXI[0];
 

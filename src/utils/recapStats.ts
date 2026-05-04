@@ -255,39 +255,51 @@ export const calculateTournamentStats = (
     };
   }
 
-  // ═══ GOLDEN GLOVE — GK of team with most clean sheets ═══
+  // ═══ GOLDEN GLOVE — synced from Best XI goalkeeper (GK with most clean sheets) ═══
   let goldenGlove: GoldenGloveInfo | null = null;
   if (isComplete) {
-    const teamCleanSheets = new Map<string, number>();
+    // Count clean sheets per GK using match data (same logic as bestXI.ts)
+    const gkCleanSheets = new Map<string, { name: string; teamName: string; count: number }>();
+
     for (const match of [...completedGroupMatches, ...completedKnockoutMatches]) {
       if (match.homeScore == null || match.awayScore == null) continue;
       if (!match.homeTeamId || !match.awayTeamId) continue;
-      if (match.awayScore === 0) {
-        teamCleanSheets.set(match.homeTeamId, (teamCleanSheets.get(match.homeTeamId) ?? 0) + 1);
+
+      const homeTeam = TEAMS_BY_ID[match.homeTeamId];
+      const awayTeam = TEAMS_BY_ID[match.awayTeamId];
+
+      if (match.awayScore === 0 && homeTeam) {
+        const gk = homeTeam.players.find(p => p.position === 'GK');
+        if (gk) {
+          const key = `${homeTeam.id}:${gk.id}`;
+          const existing = gkCleanSheets.get(key);
+          gkCleanSheets.set(key, {
+            name: gk.name,
+            teamName: homeTeam.name,
+            count: (existing?.count ?? 0) + 1,
+          });
+        }
       }
-      if (match.homeScore === 0) {
-        teamCleanSheets.set(match.awayTeamId, (teamCleanSheets.get(match.awayTeamId) ?? 0) + 1);
+      if (match.homeScore === 0 && awayTeam) {
+        const gk = awayTeam.players.find(p => p.position === 'GK');
+        if (gk) {
+          const key = `${awayTeam.id}:${gk.id}`;
+          const existing = gkCleanSheets.get(key);
+          gkCleanSheets.set(key, {
+            name: gk.name,
+            teamName: awayTeam.name,
+            count: (existing?.count ?? 0) + 1,
+          });
+        }
       }
     }
 
-    let bestTeamId: string | null = null;
+    // Pick the GK with most clean sheets (same tie-break as bestXI.ts)
     let bestCS = 0;
-    for (const [teamId, cs] of teamCleanSheets) {
-      if (cs > bestCS) {
-        bestCS = cs;
-        bestTeamId = teamId;
-      }
-    }
-
-    if (bestTeamId && bestCS > 0) {
-      const team = TEAMS_BY_ID[bestTeamId];
-      if (team) {
-        const gk = team.players.find((p) => p.position === 'GK');
-        goldenGlove = {
-          playerName: gk?.name ?? 'Thủ môn không xác định',
-          teamName: team.name,
-          cleanSheets: bestCS,
-        };
+    for (const [, info] of gkCleanSheets) {
+      if (info.count > bestCS) {
+        bestCS = info.count;
+        goldenGlove = { playerName: info.name, teamName: info.teamName, cleanSheets: info.count };
       }
     }
   }
@@ -296,7 +308,7 @@ export const calculateTournamentStats = (
   let biggestFlop: BiggestFlopInfo | null = null;
   if (isComplete && teams?.length) {
     const sortedByRating = [...teams].sort((a, b) => b.rating - a.rating);
-    const top10 = sortedByRating.slice(0, 10);
+    const top12 = sortedByRating.slice(0, 12);
 
     // Find teams that did NOT appear in any knockout match
     const knockoutTeamIds = new Set<string>();
@@ -307,8 +319,8 @@ export const calculateTournamentStats = (
       }
     }
 
-    for (let i = 0; i < top10.length; i++) {
-      const team = top10[i];
+    for (let i = 0; i < top12.length; i++) {
+      const team = top12[i];
       if (!knockoutTeamIds.has(team.id)) {
         biggestFlop = { teamName: team.name, rank: i + 1 };
         break;
@@ -324,7 +336,7 @@ export const calculateTournamentStats = (
     const bottomHalf = new Set(sortedByRating.slice(halfwayIndex).map((t) => t.id));
 
     const KO_ROUND_ORDER = ['roundOf32', 'roundOf16', 'quarterfinals', 'semifinals', 'thirdPlace', 'final'] as const;
-    const DEEP_ROUNDS: string[] = ['quarterfinals', 'semifinals', 'thirdPlace', 'final'];
+    const DEEP_ROUNDS: string[] = ['roundOf16', 'quarterfinals', 'semifinals', 'thirdPlace', 'final'];
 
     const deepestRound = new Map<string, string>();
     for (const round of KO_ROUND_ORDER) {
@@ -340,10 +352,11 @@ export const calculateTournamentStats = (
     }
 
     const ROUND_DEPTH: Record<string, number> = {
-      quarterfinals: 1,
-      semifinals: 2,
-      thirdPlace: 3,
-      final: 4,
+      roundOf16: 1,
+      quarterfinals: 2,
+      semifinals: 3,
+      thirdPlace: 4,
+      final: 5,
     };
 
     let bestCinderellaId: string | null = null;
