@@ -43,8 +43,8 @@ const weightedPick = <T,>(choices: Array<{ value: T; weight: number }>) => {
 };
 
 /**
- * Expanded goal range 0–10 with realistic distribution.
- * 0–3 goals ~90%, 4–6 ~8%, 7+ ~2% (very rare spectacle).
+ * Standard goal distribution — realistic WC distribution.
+ * 0–3 goals ~90%, 4–6 ~8%, 7+ ~2%.
  */
 const sampleBaseGoals = () =>
   weightedPick<number>([
@@ -59,6 +59,56 @@ const sampleBaseGoals = () =>
     { value: 8, weight: 0.45 },
     { value: 9, weight: 0.1 },
     { value: 10, weight: 0.05 },
+  ]);
+
+/**
+ * Favorites scenario — STRONG team goal distribution.
+ * Strong team scores a lot; weak team blank chance reduced to ~65%.
+ * Also added an "off-day" factor where strong team might struggle.
+ */
+const sampleFavoritesStrongGoals = () =>
+  weightedPick<number>([
+    { value: 0, weight: 15 }, // Increased slightly for "off-day"
+    { value: 1, weight: 22 },
+    { value: 2, weight: 25 },
+    { value: 3, weight: 20 },
+    { value: 4, weight: 10 },
+    { value: 5, weight: 5 },
+    { value: 6, weight: 2 },
+    { value: 7, weight: 1 },
+  ]);
+
+const sampleFavoritesWeakGoals = () =>
+  weightedPick<number>([
+    { value: 0, weight: 65 }, // Reduced from 77% to make it less "perfectly" predictable
+    { value: 1, weight: 25 },
+    { value: 2, weight: 8 },
+    { value: 3, weight: 2 },
+  ]);
+
+/**
+ * Underdogs scenario distributions.
+ * The "Underdog" (weaker) gets a slightly better chance than the "Favorite" (stronger).
+ */
+const sampleUnderdogsAdvantaged = () =>
+  weightedPick<number>([
+    { value: 0, weight: 15 },
+    { value: 1, weight: 30 },
+    { value: 2, weight: 28 },
+    { value: 3, weight: 18 },
+    { value: 4, weight: 6 },
+    { value: 5, weight: 2 },
+    { value: 6, weight: 1 },
+  ]);
+
+const sampleUnderdogsDisadvantaged = () =>
+  weightedPick<number>([
+    { value: 0, weight: 30 },
+    { value: 1, weight: 32 },
+    { value: 2, weight: 22 },
+    { value: 3, weight: 10 },
+    { value: 4, weight: 4 },
+    { value: 5, weight: 2 },
   ]);
 
 /**
@@ -81,8 +131,8 @@ const applyRatingBias = (
     // Double the gap — stronger team wins decisively (~80%)
     effectiveDiff = ratingDifference * 2.0;
   } else if (scenario === 'underdogs') {
-    // Invert and amplify — weaker team gets strong advantage (~80%)
-    effectiveDiff = -ratingDifference * 1.5;
+    // Invert and amplify slightly for natural variance if we use standard distribution
+    effectiveDiff = -ratingDifference * 0.8;
   }
 
   const magnitude = Math.abs(effectiveDiff);
@@ -96,7 +146,31 @@ const applyRatingBias = (
   return clamp(adjusted, 0, 10);
 };
 
+/**
+ * Generates a scoreline using scenario-specific goal distributions.
+ *
+ * - standard:   both teams use the shared base distribution + mild rating bias
+ * - favorites:  stronger team draws from a high-scoring table;
+ *               weaker team draws from a low-scoring (mostly 0) table
+ * - underdogs:  both teams draw from the same "flat" distribution → max chaos
+ */
 const generateScoreline = (homeTeam: Team, awayTeam: Team, scenario: TournamentScenario = 'standard') => {
+  if (scenario === 'favorites') {
+    const homeIsStronger = homeTeam.rating >= awayTeam.rating;
+    const homeGoals = homeIsStronger ? sampleFavoritesStrongGoals() : sampleFavoritesWeakGoals();
+    const awayGoals = homeIsStronger ? sampleFavoritesWeakGoals() : sampleFavoritesStrongGoals();
+    return { homeGoals, awayGoals };
+  }
+
+  if (scenario === 'underdogs') {
+    const homeIsUnderdog = homeTeam.rating < awayTeam.rating;
+    // The underdog gets the advantaged distribution
+    const homeGoals = homeIsUnderdog ? sampleUnderdogsAdvantaged() : sampleUnderdogsDisadvantaged();
+    const awayGoals = homeIsUnderdog ? sampleUnderdogsDisadvantaged() : sampleUnderdogsAdvantaged();
+    return { homeGoals, awayGoals };
+  }
+
+  // standard
   const homeGoals = applyRatingBias(sampleBaseGoals(), homeTeam.rating - awayTeam.rating, scenario);
   const awayGoals = applyRatingBias(sampleBaseGoals(), awayTeam.rating - homeTeam.rating, scenario);
 
