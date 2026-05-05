@@ -43,7 +43,47 @@ const weightedPick = <T,>(choices: Array<{ value: T; weight: number }>) => {
 };
 
 /**
- * Standard goal distribution — realistic WC distribution.
+ * ═══════════════════════════════════════════════════════════════
+ *  SCENARIO ENGINE — Outcome-First approach
+ *
+ *  Tiêu chuẩn (Standard): Thuần ngẫu nhiên 100%. Cả 2 đội bốc
+ *  độc lập từ mâm cơ bản. Không quan tâm chênh lệch Rating.
+ *
+ *  Kẻ mạnh (Favorites): Roll %: 80% đội mạnh thắng | 10% Hòa
+ *  | 10% Đội yếu thắng. Sau đó sinh tỷ số khớp outcome đó.
+ *
+ *  Ngựa ô (Underdogs): Roll %: 20% đội mạnh thắng | 20% Hòa
+ *  | 60% Đội yếu thắng. Tương tự, sinh tỷ số khớp outcome.
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+type MatchOutcome = 'strong-wins' | 'draw' | 'weak-wins';
+
+/**
+ * Rolls an outcome according to the scenario's probability table.
+ */
+const rollOutcome = (scenario: TournamentScenario): MatchOutcome => {
+  const r = Math.random();
+
+  if (scenario === 'favorites') {
+    // 80% strong-wins | 10% draw | 10% weak-wins
+    if (r < 0.80) return 'strong-wins';
+    if (r < 0.90) return 'draw';
+    return 'weak-wins';
+  }
+
+  if (scenario === 'underdogs') {
+    // 20% strong-wins | 20% draw | 60% weak-wins
+    if (r < 0.20) return 'strong-wins';
+    if (r < 0.40) return 'draw';
+    return 'weak-wins';
+  }
+
+  return 'draw'; // placeholder — not used in standard path
+};
+
+/**
+ * Base pool (0–10 goals) — realistic World Cup distribution.
  * 0–3 goals ~90%, 4–6 ~8%, 7+ ~2%.
  */
 const sampleBaseGoals = () =>
@@ -62,120 +102,84 @@ const sampleBaseGoals = () =>
   ]);
 
 /**
- * Favorites scenario — STRONG team goal distribution.
- * Strong team scores a lot; weak team blank chance reduced to ~65%.
- * Also added an "off-day" factor where strong team might struggle.
+ * Generates (winnerGoals, loserGoals) where winnerGoals > loserGoals,
+ * both sampled from the base pool. Retries until constraint satisfied.
  */
-const sampleFavoritesStrongGoals = () =>
-  weightedPick<number>([
-    { value: 0, weight: 15 }, // Increased slightly for "off-day"
-    { value: 1, weight: 22 },
-    { value: 2, weight: 25 },
-    { value: 3, weight: 20 },
-    { value: 4, weight: 10 },
-    { value: 5, weight: 5 },
-    { value: 6, weight: 2 },
-    { value: 7, weight: 1 },
-  ]);
-
-const sampleFavoritesWeakGoals = () =>
-  weightedPick<number>([
-    { value: 0, weight: 65 }, // Reduced from 77% to make it less "perfectly" predictable
-    { value: 1, weight: 25 },
-    { value: 2, weight: 8 },
-    { value: 3, weight: 2 },
-  ]);
+const sampleWinnerLoserGoals = (): { winnerGoals: number; loserGoals: number } => {
+  for (;;) {
+    const a = sampleBaseGoals();
+    const b = sampleBaseGoals();
+    if (a !== b) {
+      return { winnerGoals: Math.max(a, b), loserGoals: Math.min(a, b) };
+    }
+  }
+};
 
 /**
- * Underdogs scenario distributions.
- * The "Underdog" (weaker) gets a slightly better chance than the "Favorite" (stronger).
+ * Samples a draw scoreline (both teams same goals).
+ * Draws tend to be low-scoring: 0-0 and 1-1 are most common.
  */
-const sampleUnderdogsAdvantaged = () =>
+const sampleDrawGoals = (): number =>
   weightedPick<number>([
-    { value: 0, weight: 15 },
+    { value: 0, weight: 25 },
     { value: 1, weight: 30 },
-    { value: 2, weight: 28 },
-    { value: 3, weight: 18 },
-    { value: 4, weight: 6 },
-    { value: 5, weight: 2 },
-    { value: 6, weight: 1 },
-  ]);
-
-const sampleUnderdogsDisadvantaged = () =>
-  weightedPick<number>([
-    { value: 0, weight: 30 },
-    { value: 1, weight: 32 },
-    { value: 2, weight: 22 },
+    { value: 2, weight: 20 },
     { value: 3, weight: 10 },
-    { value: 4, weight: 4 },
-    { value: 5, weight: 2 },
+    { value: 4, weight: 5 },
+    { value: 5, weight: 5 },
+    { value: 6, weight: 3 },
+    { value: 7, weight: 1 },
+    { value: 8, weight: 0.5 },
+    { value: 9, weight: 0.4 },
+    { value: 10, weight: 0.1 },
   ]);
 
 /**
- * Applies scenario-aware rating bias to a base goal count.
+ * ─── Main Scoreline Generator ────────────────────────────────
  *
- * Standard  – use rating diff as-is, moderate natural advantage.
- * Favorites – amplify diff ×2.0 → stronger team wins ~80% of the time.
- * Underdogs – INVERT and scale diff ×1.5 → weaker team gets the edge,
- *             winning ~80% of the time instead.
+ * Standard  : Both teams independently sample from the base pool.
+ *             Pure randomness — Rating is ignored.
+ *
+ * Favorites : Roll outcome (80% strong / 10% draw / 10% weak).
+ *             Generate a score that matches the rolled outcome.
+ *
+ * Underdogs : Roll outcome (20% strong / 20% draw / 60% weak).
+ *             Same logic, reversed probabilities.
  */
-const applyRatingBias = (
-  goals: number,
-  ratingDifference: number,
+const generateScoreline = (
+  homeTeam: Team,
+  awayTeam: Team,
   scenario: TournamentScenario = 'standard',
-) => {
-  let adjusted = goals;
-  let effectiveDiff = ratingDifference;
+): { homeGoals: number; awayGoals: number } => {
 
-  if (scenario === 'favorites') {
-    // Double the gap — stronger team wins decisively (~80%)
-    effectiveDiff = ratingDifference * 2.0;
-  } else if (scenario === 'underdogs') {
-    // Invert and amplify slightly for natural variance if we use standard distribution
-    effectiveDiff = -ratingDifference * 0.8;
+  // ── Standard: purely random, no rating awareness ──────────
+  if (scenario === 'standard') {
+    return {
+      homeGoals: sampleBaseGoals(),
+      awayGoals: sampleBaseGoals(),
+    };
   }
 
-  const magnitude = Math.abs(effectiveDiff);
-  const positiveBias = Math.min(0.55, magnitude / 32);
-  const negativeBias = Math.min(0.45, magnitude / 34);
+  // ── Favorites / Underdogs: outcome-first ──────────────────
+  const homeIsStronger = homeTeam.rating > awayTeam.rating || (homeTeam.rating === awayTeam.rating && Math.random() < 0.5);
+  const outcome = rollOutcome(scenario);
 
-  if (effectiveDiff >= 8 && Math.random() < positiveBias) adjusted += 1;
-  if (effectiveDiff >= 15 && Math.random() < 0.18) adjusted += 1;
-  if (effectiveDiff <= -8 && adjusted > 0 && Math.random() < negativeBias) adjusted -= 1;
+  if (outcome === 'draw') {
+    const g = sampleDrawGoals();
+    return { homeGoals: g, awayGoals: g };
+  }
 
-  return clamp(adjusted, 0, 10);
+  const { winnerGoals, loserGoals } = sampleWinnerLoserGoals();
+  const strongWins = outcome === 'strong-wins';
+  // Map strong/weak win to home/away
+  const homeWins = homeIsStronger ? strongWins : !strongWins;
+
+  return {
+    homeGoals: homeWins ? winnerGoals : loserGoals,
+    awayGoals: homeWins ? loserGoals : winnerGoals,
+  };
 };
 
-/**
- * Generates a scoreline using scenario-specific goal distributions.
- *
- * - standard:   both teams use the shared base distribution + mild rating bias
- * - favorites:  stronger team draws from a high-scoring table;
- *               weaker team draws from a low-scoring (mostly 0) table
- * - underdogs:  both teams draw from the same "flat" distribution → max chaos
- */
-const generateScoreline = (homeTeam: Team, awayTeam: Team, scenario: TournamentScenario = 'standard') => {
-  if (scenario === 'favorites') {
-    const homeIsStronger = homeTeam.rating >= awayTeam.rating;
-    const homeGoals = homeIsStronger ? sampleFavoritesStrongGoals() : sampleFavoritesWeakGoals();
-    const awayGoals = homeIsStronger ? sampleFavoritesWeakGoals() : sampleFavoritesStrongGoals();
-    return { homeGoals, awayGoals };
-  }
-
-  if (scenario === 'underdogs') {
-    const homeIsUnderdog = homeTeam.rating < awayTeam.rating;
-    // The underdog gets the advantaged distribution
-    const homeGoals = homeIsUnderdog ? sampleUnderdogsAdvantaged() : sampleUnderdogsDisadvantaged();
-    const awayGoals = homeIsUnderdog ? sampleUnderdogsDisadvantaged() : sampleUnderdogsAdvantaged();
-    return { homeGoals, awayGoals };
-  }
-
-  // standard
-  const homeGoals = applyRatingBias(sampleBaseGoals(), homeTeam.rating - awayTeam.rating, scenario);
-  const awayGoals = applyRatingBias(sampleBaseGoals(), awayTeam.rating - homeTeam.rating, scenario);
-
-  return { homeGoals, awayGoals };
-};
 
 const playerWeight = (player: PlayerProfile) => {
   switch (player.position) {
@@ -603,23 +607,27 @@ export interface PenaltyShootoutResult {
   timeline: PenaltyShootoutKick[];
 }
 
+/**
+ * Penalty Shootout — Flat 72% conversion rate, no rating influence.
+ *
+ * Every player on both sides has exactly 72% chance to score.
+ * Result is entirely random (50/50 per-kick fairness).
+ */
 export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): PenaltyShootoutResult => {
-  const homePlayers = homeTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF');
-  const awayPlayers = awayTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF');
-  // Fallback to all players if not enough FW/MF
-  const homePool = homePlayers.length >= 3 ? homePlayers : homeTeam.players;
-  const awayPool = awayPlayers.length >= 3 ? awayPlayers : awayTeam.players;
+  // Prefer FW/MF kickers; fall back to full squad if too few
+  const homePool = homeTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF').length >= 3
+    ? homeTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF')
+    : homeTeam.players;
+  const awayPool = awayTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF').length >= 3
+    ? awayTeam.players.filter((p) => p.position === 'FW' || p.position === 'MF')
+    : awayTeam.players;
 
-  const pickPlayer = (pool: typeof homePool, usedIndex: number) =>
-    pool[usedIndex % pool.length];
-
-  const getKickConversionRate = (team: Team, opponent: Team) =>
-    clamp(0.72 + (team.rating - opponent.rating) * 0.006, 0.64, 0.86);
+  /** Fixed 72% conversion rate — no rating bias */
+  const CONVERSION_RATE = 0.72;
 
   const hasDecisiveLead = (home: number, away: number, homeKicks: number, awayKicks: number) => {
     const remainingHome = Math.max(0, 5 - homeKicks);
     const remainingAway = Math.max(0, 5 - awayKicks);
-
     return home > away + remainingAway || away > home + remainingHome;
   };
 
@@ -633,11 +641,11 @@ export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): Penalty
 
     const takeKick = (side: 'home' | 'away') => {
       const team = side === 'home' ? homeTeam : awayTeam;
-      const opponent = side === 'home' ? awayTeam : homeTeam;
       const pool = side === 'home' ? homePool : awayPool;
       const kickIndex = side === 'home' ? homeKicks : awayKicks;
-      const player = pickPlayer(pool, kickIndex);
-      const scored = Math.random() < getKickConversionRate(team, opponent);
+      const player = pool[kickIndex % pool.length];
+      // Flat 72% for everyone — pure luck, no rating
+      const scored = Math.random() < CONVERSION_RATE;
 
       kicks.push({ teamId: team.id, playerName: player.name, scored, side });
 
@@ -650,56 +658,44 @@ export const simulatePenaltyShootout = (homeTeam: Team, awayTeam: Team): Penalty
       }
     };
 
+    // 5-kick regulation
     for (let round = 0; round < 5; round += 1) {
       takeKick(homeFirst ? 'home' : 'away');
       if (hasDecisiveLead(home, away, homeKicks, awayKicks)) {
         return { home, away, timeline: kicks };
       }
-
       takeKick(homeFirst ? 'away' : 'home');
       if (hasDecisiveLead(home, away, homeKicks, awayKicks)) {
         return { home, away, timeline: kicks };
       }
     }
 
-    if (home !== away) {
-      return { home, away, timeline: kicks };
-    }
+    if (home !== away) return { home, away, timeline: kicks };
 
-    for (let suddenDeathRound = 0; suddenDeathRound < 15; suddenDeathRound += 1) {
+    // Sudden death — up to 15 extra rounds
+    for (let sd = 0; sd < 15; sd += 1) {
       takeKick(homeFirst ? 'home' : 'away');
       takeKick(homeFirst ? 'away' : 'home');
-
-      if (home !== away) {
-        return { home, away, timeline: kicks };
-      }
+      if (home !== away) return { home, away, timeline: kicks };
     }
 
     return null;
   };
 
+  // Retry loop (very unlikely to need >5 tries at 72% balanced conversion)
   for (let attempt = 0; attempt < 200; attempt += 1) {
     const result = simulateSingleShootout();
-
-    // Any valid result from simulateSingleShootout is mathematically correct in football.
-    // Removed old isAcceptedScoreline so we don't accidentally fallback and lose timeline data.
-    if (result && result.home !== result.away) {
-      return result;
-    }
+    if (result && result.home !== result.away) return result;
   }
 
-  // Fallback (giữ nguyên độ đa dạng như cũ theo yêu cầu)
-  const homeWins = Math.random() < clamp(0.5 + (homeTeam.rating - awayTeam.rating) / 80, 0.35, 0.65);
+  // Pure-random fallback — coin flip winner, common shootout scoreline
+  const homeWins = Math.random() < 0.5;
   const fallback = weightedPick([
-    { value: { win: 3, lose: 0 }, weight: 10 },
-    { value: { win: 4, lose: 2 }, weight: 24 },
-    { value: { win: 4, lose: 3 }, weight: 28 },
+    { value: { win: 4, lose: 2 }, weight: 20 },
+    { value: { win: 4, lose: 3 }, weight: 35 },
     { value: { win: 5, lose: 3 }, weight: 20 },
-    { value: { win: 5, lose: 4 }, weight: 30 },
-    { value: { win: 6, lose: 5 }, weight: 12 },
-    { value: { win: 7, lose: 6 }, weight: 6 },
+    { value: { win: 5, lose: 4 }, weight: 25 },
   ]);
-
   return homeWins
     ? { home: fallback.win, away: fallback.lose, timeline: [] }
     : { home: fallback.lose, away: fallback.win, timeline: [] };

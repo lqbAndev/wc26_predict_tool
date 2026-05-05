@@ -64,9 +64,27 @@ function App() {
   }, []);
 
   const SCENARIO_OPTIONS = [
-    { value: 'standard' as const, label: 'Tiêu chuẩn', desc: 'Kết quả theo tỷ lệ thực tế' },
-    { value: 'favorites' as const, label: 'Cuộc chơi Kẻ mạnh', desc: 'Đội mạnh chiếm ~80% lợi thế' },
-    { value: 'underdogs' as const, label: 'Lễ hội Ngựa ô', desc: 'Đội yếu có ~80% cơ hội đảo ngược' },
+    {
+      value: 'standard' as const,
+      label: 'Tiêu chuẩn',
+      desc: 'Thuần ngẫu nhiên — bỏ qua Rating',
+      badge: '50 / 0 / 50',
+      color: 'text-white/55',
+    },
+    {
+      value: 'favorites' as const,
+      label: 'Cuộc chơi Kẻ mạnh',
+      desc: 'Kịch bản đội mạnh áp đảo',
+      badge: 'Đang áp dụng',
+      color: 'text-amber-300/80',
+    },
+    {
+      value: 'underdogs' as const,
+      label: 'Lễ hội Ngựa ô',
+      desc: 'Kịch bản đội yếu gây bất ngờ',
+      badge: 'Đang áp dụng',
+      color: 'text-emerald-300/80',
+    },
   ];
   const activeScenario = coreState.scenario ?? 'standard';
   const currentOption = SCENARIO_OPTIONS.find((o) => o.value === activeScenario) ?? SCENARIO_OPTIONS[0];
@@ -318,9 +336,24 @@ function App() {
                   )}
                 </div>
 
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/65">
-                  Bảng xếp hạng cập nhật sau mỗi lần bấm Dự đoán
-                </div>
+                {/* Active Scenario Banner */}
+                {activeScenario !== 'standard' && (
+                  <div className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold ${
+                    activeScenario === 'favorites'
+                      ? 'border-amber-400/30 bg-amber-400/10 text-amber-200'
+                      : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200'
+                  }`}>
+                    <Zap className="h-3 w-3" />
+                    {currentOption.label} — 
+                    <span className="opacity-70">{currentOption.desc}</span>
+                  </div>
+                )}
+                {activeScenario === 'standard' && (
+                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/50">
+                    <Zap className="h-3 w-3" />
+                    Tiêu chuẩn — thuần ngẫu nhiên, bỏ qua Rating
+                  </div>
+                )}
               </div>
             </div>
 
