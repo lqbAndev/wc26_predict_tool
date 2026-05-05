@@ -483,7 +483,7 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         ) : null}
 
         <StatCard
-          label="Đội ghi nhiều nhất"
+          label="Đội ghi bàn nhiều nhất"
           value={stats.mostGoalsTeam?.teamName ?? '--'}
           sub={stats.mostGoalsTeam ? `${stats.mostGoalsTeam.goals} bàn` : undefined}
           accent="usa"
