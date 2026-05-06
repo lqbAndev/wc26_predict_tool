@@ -13,6 +13,7 @@ interface GroupCardProps {
   standings: TeamStanding[];
   qualifiedThirdIds: Set<string>;
   onPredict: (matchId: string) => void;
+  onTeamClick?: (teamId: string) => void;
 }
 
 export const GroupCard = ({
@@ -21,6 +22,7 @@ export const GroupCard = ({
   standings,
   qualifiedThirdIds,
   onPredict,
+  onTeamClick,
 }: GroupCardProps) => {
   const completedMatches = matches.filter((match) => match.status === 'completed').length;
 
@@ -32,13 +34,15 @@ export const GroupCard = ({
           <h3 className="mt-2 text-2xl font-bold text-white">{group.label}</h3>
           <div className="mt-3 flex flex-wrap gap-2">
             {group.teams.map((team) => (
-              <span
+              <button
                 key={team.id}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/75"
+                type="button"
+                onClick={() => onTeamClick?.(team.id)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/75 transition-all duration-200 hover:border-white/20 hover:bg-gray-700/50 hover:text-white hover:shadow-[0_2px_12px_rgba(255,255,255,0.06)] active:scale-[0.97]"
               >
                 <Flag teamName={team.name} size={20} />
                 <span>{team.shortName}</span>
-              </span>
+              </button>
             ))}
           </div>
         </div>

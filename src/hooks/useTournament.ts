@@ -179,7 +179,8 @@ export const useTournament = () => {
         targetMatch,
         TEAMS_BY_ID[targetMatch.homeTeamId],
         TEAMS_BY_ID[targetMatch.awayTeamId],
-        currentState.scenario ?? 'standard',
+        // Knockout stage always uses 'standard' (pure 50/50) — no rating bias
+        'standard',
       );
 
       let nextKnockoutState: TournamentCoreState['knockoutMatches'] = {

@@ -190,7 +190,7 @@ const playerWeight = (player: PlayerProfile) => {
     case 'DF':
       return 3;
     case 'GK':
-      return 1;
+      return 0;
   }
 };
 
@@ -337,9 +337,13 @@ const generateScorersForTeam = (team: Team, minutes: number[]) => {
     return [];
   }
 
+  // Filter out goalkeepers — GKs cannot score in simulation
+  const outfieldPlayers = team.players.filter((p) => p.position !== 'GK');
+  const candidates = outfieldPlayers.length > 0 ? outfieldPlayers : team.players;
+
   return minutes.map((minute) => {
     const player = weightedPick(
-      team.players.map((candidate) => ({
+      candidates.map((candidate) => ({
         value: candidate,
         weight: playerWeight(candidate),
       })),

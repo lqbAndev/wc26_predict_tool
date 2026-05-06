@@ -1,0 +1,143 @@
+import { useEffect, useRef, useState } from 'react';
+import { X, Shield } from 'lucide-react';
+import type { Team, PlayerProfile, PlayerPosition } from '../types/tournament';
+import { Flag } from './Flag';
+import { getTeamLogoSrc } from '../data/logoMap';
+
+interface TeamRosterModalProps {
+  isOpen: boolean;
+  team: Team | null;
+  onClose: () => void;
+}
+
+const POSITION_ORDER: PlayerPosition[] = ['FW', 'MF', 'DF', 'GK'];
+
+const POSITION_CONFIG: Record<PlayerPosition, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  FW: { label: 'Tiền đạo', color: 'text-rose-300', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-400/20' },
+  MF: { label: 'Tiền vệ', color: 'text-amber-300', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-400/20' },
+  DF: { label: 'Hậu vệ', color: 'text-sky-300', bgColor: 'bg-sky-500/10', borderColor: 'border-sky-400/20' },
+  GK: { label: 'Thủ môn', color: 'text-emerald-300', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-400/20' },
+};
+
+const groupByPosition = (players: PlayerProfile[]): Record<PlayerPosition, PlayerProfile[]> => {
+  const grouped: Record<PlayerPosition, PlayerProfile[]> = { FW: [], MF: [], DF: [], GK: [] };
+  for (const player of players) {
+    grouped[player.position].push(player);
+  }
+  return grouped;
+};
+
+export const TeamRosterModal = ({ isOpen, team, onClose }: TeamRosterModalProps) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [logoError, setLogoError] = useState(false);
+
+  // Reset logo error state when team changes
+  useEffect(() => {
+    setLogoError(false);
+  }, [team?.id]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !team) return null;
+
+  const logoSrc = getTeamLogoSrc(team.name);
+  const grouped = groupByPosition(team.players);
+
+  return (
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/65 backdrop-blur-md"
+      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+    >
+      <div className="relative mx-4 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-white/10 bg-[rgba(8,14,28,0.97)] shadow-[0_12px_60px_rgba(0,0,0,0.6)]">
+        {/* ── Header ─────────────────────────────────────── */}
+        <div className="relative flex items-center gap-4 border-b border-white/[0.06] px-5 py-4 sm:px-6">
+          {/* Decorative gradient backdrop */}
+          <div className="absolute inset-0 bg-gradient-to-r from-host-usa/10 via-transparent to-host-mexico/10" />
+
+          <div className="relative flex items-center gap-3">
+            {/* Team Logo (Badge) */}
+            {logoSrc && !logoError ? (
+              <img
+                src={logoSrc}
+                alt={`Logo ${team.name}`}
+                className="h-12 w-12 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(255,255,255,0.1)]"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5">
+                <Shield className="h-6 w-6 text-white/30" />
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Flag teamName={team.name} size={22} />
+                <h3 className="text-lg font-bold text-white sm:text-xl">{team.name}</h3>
+              </div>
+              <p className="mt-0.5 text-xs text-white/45">
+                Bảng {team.group} · {team.players.length} cầu thủ
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Body ─────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+          <div className="space-y-4">
+            {POSITION_ORDER.map((pos) => {
+              const players = grouped[pos];
+              if (players.length === 0) return null;
+              const config = POSITION_CONFIG[pos];
+
+              return (
+                <div key={pos}>
+                  {/* Position header */}
+                  <div className="mb-2 flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider ${config.color} ${config.bgColor} ${config.borderColor}`}
+                    >
+                      {pos}
+                    </span>
+                    <span className="text-xs font-medium text-white/40">{config.label}</span>
+                    <span className="text-[11px] text-white/25">({players.length})</span>
+                  </div>
+
+                  {/* Player grid */}
+                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                    {players.map((player) => (
+                      <div
+                        key={player.id}
+                        className={`rounded-xl border px-3 py-2 text-sm text-white/80 transition hover:bg-white/[0.04] ${config.borderColor} bg-white/[0.02]`}
+                      >
+                        <span className="line-clamp-1">{player.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Footer ────────────────────────────────────── */}
+        <div className="border-t border-white/[0.06] px-5 py-3 sm:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

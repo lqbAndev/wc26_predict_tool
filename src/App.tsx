@@ -10,9 +10,10 @@ import { HeadToHeadModal } from './components/HeadToHeadModal';
 import { HeroBranding } from './components/HeroBranding';
 import { KnockoutBracket } from './components/KnockoutBracket';
 import { ResetModal } from './components/ResetModal';
+import { TeamRosterModal } from './components/TeamRosterModal';
 import { TopScorersTable } from './components/TopScorersTable';
 import { TournamentRecap } from './components/TournamentRecap';
-import { GROUPS, TEAMS } from './data/tournament';
+import { GROUPS, TEAMS, TEAMS_BY_ID } from './data/tournament';
 import { useTournament } from './hooks/useTournament';
 import { buildTeamCompareStatsMap } from './utils/headToHead';
 import { calculateTournamentStats } from './utils/recapStats';
@@ -42,6 +43,7 @@ function App() {
   const [compareTeamBId, setCompareTeamBId] = useState('');
   const [compareRequested, setCompareRequested] = useState(false);
   const [scenarioOpen, setScenarioOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const prevChampionRef = useRef<string | null>(null);
   const scenarioRef = useRef<HTMLDivElement>(null);
 
@@ -366,6 +368,7 @@ function App() {
                   standings={derivedState.standingsByGroup[group.id]}
                   qualifiedThirdIds={qualifiedThirdIds}
                   onPredict={predictGroupMatch}
+                  onTeamClick={(teamId) => setSelectedTeamId(teamId)}
                 />
               ))}
             </div>
@@ -449,6 +452,12 @@ function App() {
         championName={derivedState.championName}
         onClose={() => setShowChampionModal(false)}
         onViewRecap={handleViewRecap}
+      />
+
+      <TeamRosterModal
+        isOpen={selectedTeamId !== null}
+        team={selectedTeamId ? TEAMS_BY_ID[selectedTeamId] ?? null : null}
+        onClose={() => setSelectedTeamId(null)}
       />
 
       <HeadToHeadModal
