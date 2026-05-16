@@ -27,6 +27,7 @@ deploy.ps1
 Project-update.md
 private-docs/
 *.local-backup
+src/App.dev.tsx
 
 # Project update notes (local only)
 project_updates/
