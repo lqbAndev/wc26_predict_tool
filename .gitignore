@@ -26,6 +26,7 @@ pnpm-debug.log*
 deploy.ps1
 Project-update.md
 private-docs/
+*.local-backup
 
 # Project update notes (local only)
 project_updates/

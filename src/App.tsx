@@ -14,8 +14,6 @@ function App() {
       <Route path="/hub" element={<CompetitionHub />} />
       {/* WC26 keeps its premium dedicated page */}
       <Route path="/competition/wc26/*" element={<WC26App />} />
-      {/* All other competitions use the generic dynamic page */}
-      <Route path="/competition/:id/*" element={<CompetitionApp />} />
       {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
