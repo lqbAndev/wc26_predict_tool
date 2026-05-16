@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Lock, Trophy, BarChart3 } from 'lucide-react';
 import wc26Logo from '../img/tournaments_fifa-world-cup-2026--white_128x128.football-logos.cc.png';
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/* ─────────────────────────────────────────────
    Competition Card
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+   ───────────────────────────────────────────── */
 interface CompetitionCardProps {
   title: string;
   subtitle: string;
@@ -66,18 +66,18 @@ function CompetitionCard({
   );
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ═══════════════════════════════════════════════
    COMPETITION HUB
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ═══════════════════════════════════════════════ */
 export default function CompetitionHub() {
   const navigate = useNavigate();
 
   return (
     <div className="hub-root">
-      {/* â”€â”€ ambient BG â”€â”€ */}
+      {/* ── ambient BG ── */}
       <div className="hub-bg" />
 
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* ── Header ── */}
       <header className="hub-header">
         <button
           type="button"
@@ -89,14 +89,14 @@ export default function CompetitionHub() {
         </button>
 
         <h1 className="hub-title">
-          <span className="hub-title__icon">â½</span>
+          <span className="hub-title__icon">⚽</span>
           Competition Hub
         </h1>
 
         <div className="hub-header__spacer" />
       </header>
 
-      {/* â”€â”€ Main content â”€â”€ */}
+      {/* ── Main content ── */}
       <main className="hub-main">
         {/* CUP COMPETITIONS */}
         <section className="hub-section">
@@ -115,12 +115,22 @@ export default function CompetitionHub() {
               onClick={() => navigate('/competition/wc26')}
             />
 
+            <CompetitionCard
+              title="Vibe Test Cup"
+              subtitle="8 TEAMS · 2 GROUPS · ENGINE TEST"
+              icon={
+                <div style={{ fontSize: 32, lineHeight: 1 }}>🧪</div>
+              }
+              gradient="linear-gradient(135deg, rgba(139,92,246,0.35), rgba(6,182,212,0.25))"
+              borderColor="rgba(139,92,246,0.3)"
+              onClick={() => navigate('/competition/test-cup')}
+            />
 
             <CompetitionCard
               title="UEFA Champions League"
               subtitle="Europe's Premier Club Competition"
               icon={
-                <div style={{ fontSize: 32, lineHeight: 1 }}>đŸ†</div>
+                <div style={{ fontSize: 32, lineHeight: 1 }}>🏆</div>
               }
               gradient="linear-gradient(135deg, rgba(30,64,175,0.3), rgba(99,102,241,0.2))"
               borderColor="rgba(99,102,241,0.25)"
@@ -131,7 +141,7 @@ export default function CompetitionHub() {
               title="Copa America 2028"
               subtitle="South American Championship"
               icon={
-                <div style={{ fontSize: 32, lineHeight: 1 }}>đŸŒ</div>
+                <div style={{ fontSize: 32, lineHeight: 1 }}>🌎</div>
               }
               gradient="linear-gradient(135deg, rgba(16,185,129,0.3), rgba(5,150,105,0.2))"
               borderColor="rgba(16,185,129,0.25)"
@@ -152,7 +162,7 @@ export default function CompetitionHub() {
               title="Premier League"
               subtitle="English Premier League"
               icon={
-                <div style={{ fontSize: 32, lineHeight: 1 }}>đŸ¦</div>
+                <div style={{ fontSize: 32, lineHeight: 1 }}>🦁</div>
               }
               gradient="linear-gradient(135deg, rgba(147,51,234,0.3), rgba(79,70,229,0.2))"
               borderColor="rgba(147,51,234,0.25)"
@@ -163,7 +173,7 @@ export default function CompetitionHub() {
               title="La Liga"
               subtitle="Spanish First Division"
               icon={
-                <div style={{ fontSize: 32, lineHeight: 1 }}>đŸ‡ªđŸ‡¸</div>
+                <div style={{ fontSize: 32, lineHeight: 1 }}>🇪🇸</div>
               }
               gradient="linear-gradient(135deg, rgba(239,68,68,0.3), rgba(249,115,22,0.2))"
               borderColor="rgba(239,68,68,0.25)"
@@ -174,7 +184,7 @@ export default function CompetitionHub() {
               title="V.League"
               subtitle="Vietnamese First Division"
               icon={
-                <div style={{ fontSize: 32, lineHeight: 1 }}>đŸ‡»đŸ‡³</div>
+                <div style={{ fontSize: 32, lineHeight: 1 }}>🇻🇳</div>
               }
               gradient="linear-gradient(135deg, rgba(239,68,68,0.3), rgba(250,204,21,0.2))"
               borderColor="rgba(250,204,21,0.25)"
@@ -184,9 +194,9 @@ export default function CompetitionHub() {
         </section>
       </main>
 
-      {/* â”€â”€ Footer â”€â”€ */}
+      {/* ── Footer ── */}
       <footer className="hub-footer">
-        <p>Football Prediction Tool v2.1 â€” Multi-tournament simulation platform</p>
+        <p>Football Prediction Tool v2.1 — Multi-tournament simulation platform</p>
       </footer>
     </div>
   );

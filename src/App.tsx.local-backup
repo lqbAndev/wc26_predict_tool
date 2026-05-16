@@ -2,10 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import CompetitionHub from './pages/CompetitionHub';
 import WC26App from './pages/WC26App';
+import CompetitionApp from './pages/CompetitionApp';
 
-// â”€â”€ Register all competitions into the global registry â”€â”€
+// ── Register all competitions into the global registry ──
 // Each module's side-effect import calls registerCompetition().
 import './data/competitions/wc26';
+import './data/competitions/testCup';
 
 function App() {
   return (

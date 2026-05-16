@@ -15,6 +15,7 @@ import { TeamRosterModal } from '../components/TeamRosterModal';
 import { TopScorersTable } from '../components/TopScorersTable';
 import { TournamentRecap } from '../components/TournamentRecap';
 import { GROUPS, TEAMS, TEAMS_BY_ID } from '../data/tournament';
+import { CompetitionProvider } from '../hooks/CompetitionContext';
 import { useTournament } from '../hooks/useTournament';
 import { buildTeamCompareStatsMap } from '../utils/headToHead';
 import { calculateTournamentStats } from '../utils/recapStats';
@@ -153,6 +154,7 @@ export default function WC26App() {
   };
 
   return (
+    <CompetitionProvider value={{ teamsById: TEAMS_BY_ID }}>
     <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute left-[-120px] top-[140px] hidden opacity-30 lg:block">
         <TriondaBall size={260} className="animate-ball-float" />
@@ -493,5 +495,6 @@ export default function WC26App() {
 
       <BackToTopButton />
     </div>
+    </CompetitionProvider>
   );
 }

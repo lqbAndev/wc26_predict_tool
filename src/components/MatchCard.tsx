@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, Clock } from 'lucide-react';
-import { TEAMS_BY_ID } from '../data/tournament';
+import { useTeamsById } from '../hooks/CompetitionContext';
 import type { GroupMatch } from '../types/tournament';
 import { Flag } from './Flag';
 import { TriondaBall } from './BrandAssets';
@@ -11,8 +11,9 @@ interface MatchCardProps {
 }
 
 export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
-  const homeTeam = TEAMS_BY_ID[match.homeTeamId];
-  const awayTeam = TEAMS_BY_ID[match.awayTeamId];
+  const teamsById = useTeamsById();
+  const homeTeam = teamsById[match.homeTeamId];
+  const awayTeam = teamsById[match.awayTeamId];
   const isCompleted = match.status === 'completed';
   const [expanded, setExpanded] = useState(false);
   const hasTimeline = match.timeline && match.timeline.length > 0;

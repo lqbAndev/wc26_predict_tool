@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Award, ChevronDown, Clock, Crosshair } from 'lucide-react';
-import { ROUND_LABELS, TEAMS_BY_ID } from '../data/tournament';
+import { ROUND_LABELS } from '../data/tournament';
+import { useTeamsById } from '../hooks/CompetitionContext';
 import type {
   KnockoutMatch,
   KnockoutRound,
@@ -62,8 +63,9 @@ export const KnockoutMatchCard = ({
   onPredict,
   onResolvePenalty,
 }: KnockoutMatchCardProps) => {
-  const homeTeam = match.homeTeamId ? TEAMS_BY_ID[match.homeTeamId] : null;
-  const awayTeam = match.awayTeamId ? TEAMS_BY_ID[match.awayTeamId] : null;
+  const teamsById = useTeamsById();
+  const homeTeam = match.homeTeamId ? teamsById[match.homeTeamId] : null;
+  const awayTeam = match.awayTeamId ? teamsById[match.awayTeamId] : null;
   const hasTeams = Boolean(match.homeTeamId && match.awayTeamId);
   const isCompleted = match.status === 'completed';
   const waitingPenalty = match.status === 'awaiting-penalties';
