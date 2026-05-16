@@ -29,7 +29,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['"Trebuchet MS"', '"Arial Narrow"', 'sans-serif'],
+        display: ['"Outfit"', '"Inter"', '"Trebuchet MS"', '"Arial Narrow"', 'sans-serif'],
+        sans: ['"Inter"', '"Outfit"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         glow: '0 0 0 1px rgba(255,255,255,0.08), 0 24px 70px rgba(3, 12, 8, 0.45)',

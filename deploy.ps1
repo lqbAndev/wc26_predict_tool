@@ -1,16 +1,6 @@
-$ProjectRoot   = "e:\Study\vibe-antigravity\WC26_prediction_tool"
-$BranchName    = "feature/roster-and-knockout-balance"
-$CommitMessage = "feat: roster modal, knockout 50/50 balance, GK scoring ban"
-
-$FilesToStage = @(
-  "src/utils/random.ts",
-  "src/hooks/useTournament.ts",
-  "src/components/GroupCard.tsx",
-  "src/components/TeamRosterModal.tsx",
-  "src/data/logoMap.ts",
-  "src/App.tsx",
-  "deploy.ps1"
-)
+$ProjectRoot   = "e:\Study\vibe-antigravity\football_prediction_tool"
+$BranchName    = "platform/phase-1-routing"
+$CommitMessage = "feat: migrate to multi-competition platform - Landing Page, Hub, WC26 routing"
 
 function Write-Step($msg) {
   Write-Host ""
@@ -37,9 +27,9 @@ if ($LASTEXITCODE -ne 0) { Fail "git merge origin/main" }
 OK "synced with origin/main"
 
 # ──────────────────────────────────────────────
-# 2. Create feature branch
+# 2. Create platform branch
 # ──────────────────────────────────────────────
-Write-Step "2/7  Create feature branch: $BranchName"
+Write-Step "2/7  Create platform branch: $BranchName"
 git checkout -b $BranchName 2>$null
 if ($LASTEXITCODE -ne 0) {
   # Branch may already exist
@@ -49,17 +39,10 @@ if ($LASTEXITCODE -ne 0) {
 OK "on branch $BranchName"
 
 # ──────────────────────────────────────────────
-# 3. Smart stage & commit
+# 3. Stage all changes & commit
 # ──────────────────────────────────────────────
 Write-Step "3/7  Stage and commit"
-$staged = 0
-foreach ($f in $FilesToStage) {
-  if (Test-Path $f) {
-    git add $f
-    Write-Host "     + $f" -ForegroundColor DarkGray
-    $staged++
-  }
-}
+git add -A
 git diff --cached --stat
 
 $changedFiles = git diff --cached --name-only
@@ -68,19 +51,19 @@ if (-not $changedFiles) {
 } else {
   git commit -m $CommitMessage
   if ($LASTEXITCODE -ne 0) { Fail "git commit" }
-  OK "committed ($staged files)"
+  OK "committed all changes"
 }
 
 # ──────────────────────────────────────────────
-# 4. Push feature branch
+# 4. Push platform branch
 # ──────────────────────────────────────────────
-Write-Step "4/7  Push feature branch"
+Write-Step "4/7  Push platform branch"
 git push -u origin $BranchName
-if ($LASTEXITCODE -ne 0) { Fail "git push feature branch" }
+if ($LASTEXITCODE -ne 0) { Fail "git push platform branch" }
 OK "pushed $BranchName"
 
 # ──────────────────────────────────────────────
-# 5. Merge feature → main
+# 5. Merge platform → main
 # ──────────────────────────────────────────────
 Write-Step "5/7  Merge $BranchName into main"
 git checkout main
@@ -108,5 +91,6 @@ OK "Deployed!"
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "  Done! main pushed + GitHub Pages live." -ForegroundColor Green
+Write-Host "  Branch: $BranchName" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 git log --oneline -5

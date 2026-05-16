@@ -6,4 +6,4 @@ dist
 private-docs/
 # Local deployment scripts — not pushed to git
 deploy.ps1
-git_workflow_scenarios.ps1
+Project-update.md

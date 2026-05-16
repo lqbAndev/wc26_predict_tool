@@ -21,13 +21,12 @@ export const ResetModal = ({ isOpen, onClose, onConfirm }: ResetModalProps) => {
             <AlertTriangle className="h-6 w-6 text-host-canada" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Xác nhận Reset</h3>
+            <h3 className="text-xl font-bold text-white">Confirm Reset</h3>
           </div>
         </div>
 
         <p className="mt-5 text-sm leading-6 text-white/70">
-          Bạn có chắc chắn muốn reset toàn bộ mô phỏng hiện tại? Mọi kết quả vòng bảng, giải đấu
-          knock-out và vua phá lưới đều sẽ bị xóa bỏ và làm lại từ đầu.
+          Are you sure you want to reset the entire current simulation? All group stage results, knock-out tournaments and top scorers will be erased and started over.
         </p>
 
         <div className="mt-8 flex gap-3">
@@ -36,14 +35,14 @@ export const ResetModal = ({ isOpen, onClose, onConfirm }: ResetModalProps) => {
             onClick={onClose}
             className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10"
           >
-            Hủy bỏ
+            Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="flex-1 rounded-2xl border border-host-canada/25 bg-host-canada/16 px-4 py-3 text-sm font-semibold text-host-ice transition hover:bg-host-canada/22"
           >
-            Đồng ý Reset
+            Confirm Reset
           </button>
         </div>
       </div>
