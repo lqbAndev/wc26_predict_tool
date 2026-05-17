@@ -91,7 +91,7 @@ const SeasonMOTSCard = ({
 }) => (
   <div className="rounded-[28px] border border-host-mexico/24 bg-host-mexico/12 p-5 transition hover:scale-[1.02]">
     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-host-ice/55">
-      <Award className="h-4 w-4" /> MOTS (Man of the Season)
+      <Award className="h-4 w-4" /> POTS (Player of the Season)
     </div>
     <div className="mt-3 flex items-center gap-2.5">
       <Flag teamName={teamName} size={28} />
@@ -351,7 +351,7 @@ const Podium = ({
         <Flag teamName={runnerUp} size={36} />
       </div>
       <div className="mt-2 flex items-center gap-1 text-[10px] uppercase tracking-widest text-host-ice/50 sm:gap-1.5 sm:text-xs">
-        <Medal className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Á quân
+        <Medal className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Runner-up
       </div>
       <span className="mt-1 text-center text-sm font-bold text-white/80 sm:text-base">{runnerUp}</span>
       <div className="mt-3 flex h-[72px] w-full items-center justify-center rounded-t-2xl border border-b-0 border-white/10 bg-gradient-to-t from-white/[0.03] to-white/[0.08] sm:h-20">
@@ -371,7 +371,7 @@ const Podium = ({
         <ChampionCup size={38} />
       </div>
       <div className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.2em] text-host-mexico/80 sm:gap-1.5 sm:text-xs sm:tracking-[0.25em]">
-        <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Vô địch
+        <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Champion
       </div>
       <span className="mt-1 text-center text-base font-black text-white sm:text-xl">{champion}</span>
       <div className="mt-3 flex h-[100px] w-full items-center justify-center rounded-t-2xl border border-b-0 border-host-mexico/20 bg-gradient-to-t from-host-mexico/[0.04] to-host-mexico/[0.12] sm:h-[120px]">
@@ -384,7 +384,7 @@ const Podium = ({
         <Flag teamName={thirdPlace} size={32} />
       </div>
       <div className="mt-2 flex items-center gap-1 text-[10px] uppercase tracking-widest text-host-ice/50 sm:gap-1.5 sm:text-xs">
-        <Award className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Hạng ba
+        <Award className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Third Place
       </div>
       <span className="mt-1 text-center text-sm font-bold text-white/80 sm:text-base">{thirdPlace}</span>
       <div className="mt-3 flex h-[52px] w-full items-center justify-center rounded-t-2xl border border-b-0 border-white/10 bg-gradient-to-t from-white/[0.02] to-white/[0.06] sm:h-[60px]">
@@ -402,7 +402,7 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
           <WorldCupLogo size={36} />
           <div>
             <p className="field-label">Tournament Recap</p>
-            <h3 className="mt-1 text-xl font-bold text-white/50">Hoàn tất toàn bộ giải đấu để xem recap</h3>
+            <h3 className="mt-1 text-xl font-bold text-white/50">Complete the entire tournament to view recap</h3>
           </div>
         </div>
       </div>
@@ -429,7 +429,7 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
             <WorldCupLogo size={52} />
             <div>
               <p className="field-label">Tournament Recap</p>
-              <h2 className="mt-1 text-3xl font-bold text-white sm:text-4xl">Tổng kết World Cup 2026</h2>
+              <h2 className="mt-1 text-3xl font-bold text-white sm:text-4xl">World Cup 2026 Recap</h2>
             </div>
             <TriondaBall size={56} className="ml-auto hidden animate-ball-float sm:block" />
           </div>
@@ -441,13 +441,13 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Tổng bàn thắng" value={stats.totalGoals} sub={`${stats.goalsPerMatch} bàn/trận`} accent="usa" />
-        <StatCard label="Tổng trận đấu" value={stats.totalMatches} sub="Trận đã hoàn tất" accent="mexico" />
-        <StatCard label="Penalty Shootout" value={stats.totalPenaltyMatches} sub="Trận phân thắng bại luân lưu" accent="canada" />
+        <StatCard label="Total Goals" value={stats.totalGoals} sub={`${stats.goalsPerMatch} goals/match`} accent="usa" />
+        <StatCard label="Total Matches" value={stats.totalMatches} sub="Matches Completed" accent="mexico" />
+        <StatCard label="Penalty Shootout" value={stats.totalPenaltyMatches} sub="Penalty Shootout Matches" accent="canada" />
         <StatCard
-          label="Vua phá lưới"
+          label="Top Scorer"
           value={stats.topScorer ? stats.topScorer.playerName : '--'}
-          sub={stats.topScorer ? `${stats.topScorer.goals} bàn · ${stats.topScorer.teamName}` : undefined}
+          sub={stats.topScorer ? `${stats.topScorer.goals} goals · ${stats.topScorer.teamName}` : undefined}
           accent="neutral"
           flagTeam={stats.topScorer?.teamName}
         />
@@ -460,10 +460,10 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         ) : (
           <div className="rounded-[28px] border border-host-mexico/18 bg-host-mexico/8 p-5">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-host-ice/55">
-              <Award className="h-4 w-4" /> MOTS (Man of the Season)
+              <Award className="h-4 w-4" /> POTS (Player of the Season)
             </div>
             <div className="mt-3 text-2xl font-black text-white/45">--</div>
-            <div className="mt-2 text-sm text-white/55">Hoàn tất giải đấu để xác định.</div>
+            <div className="mt-2 text-sm text-white/55">Complete tournament to determine.</div>
           </div>
         )}
 
@@ -471,28 +471,28 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         {stats.goldenGlove ? (
           <div className="rounded-[28px] border border-sky-400/24 bg-sky-500/10 p-5 transition hover:scale-[1.02]">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-sky-300/70">
-              <ShieldCheck className="h-4 w-4" /> Găng tay vàng
+              <ShieldCheck className="h-4 w-4" /> Golden Glove
             </div>
             <div className="mt-3 flex items-center gap-2.5">
               <Flag teamName={stats.goldenGlove.teamName} size={26} />
               <span className="truncate text-2xl font-black text-white">{stats.goldenGlove.playerName}</span>
             </div>
             <div className="mt-2 text-sm text-white/70">{stats.goldenGlove.teamName}</div>
-            <div className="mt-0.5 text-xs text-white/45">{stats.goldenGlove.cleanSheets} trận giữ sạch lưới</div>
+            <div className="mt-0.5 text-xs text-white/45">{stats.goldenGlove.cleanSheets} clean sheets</div>
           </div>
         ) : null}
 
         <StatCard
-          label="Đội ghi bàn nhiều nhất"
+          label="Most Goals Scored"
           value={stats.mostGoalsTeam?.teamName ?? '--'}
-          sub={stats.mostGoalsTeam ? `${stats.mostGoalsTeam.goals} bàn` : undefined}
+          sub={stats.mostGoalsTeam ? `${stats.mostGoalsTeam.goals} goals` : undefined}
           accent="usa"
           flagTeam={stats.mostGoalsTeam?.teamName}
         />
         <StatCard
-          label="Đội thủng lưới nhiều nhất"
+          label="Most Goals Conceded"
           value={stats.mostConcededTeam?.teamName ?? '--'}
-          sub={stats.mostConcededTeam ? `${stats.mostConcededTeam.goals} bàn` : undefined}
+          sub={stats.mostConcededTeam ? `${stats.mostConcededTeam.goals} goals` : undefined}
           accent="canada"
           flagTeam={stats.mostConcededTeam?.teamName}
         />
@@ -501,13 +501,13 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         {stats.cinderella ? (
           <div className="rounded-[28px] border border-emerald-400/24 bg-emerald-500/10 p-5 transition hover:scale-[1.02]">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-emerald-300/70">
-              <TrendingUp className="h-4 w-4" /> Ngựa ô giải đấu
+              <TrendingUp className="h-4 w-4" /> Cinderella Story
             </div>
             <div className="mt-3 flex items-center gap-2.5">
               <Flag teamName={stats.cinderella.teamName} size={26} />
               <span className="truncate text-2xl font-black text-white">{stats.cinderella.teamName}</span>
             </div>
-            <div className="mt-2 text-sm text-white/70">Hạng {stats.cinderella.rank}/48 đội — Vượt mọi kỳ vọng</div>
+            <div className="mt-2 text-sm text-white/70">Rank {stats.cinderella.rank}/48 teams — Exceeded all expectations</div>
             <div className="mt-0.5 text-xs text-white/45">{stats.cinderella.journey}</div>
           </div>
         ) : null}
@@ -516,23 +516,23 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
         {stats.biggestFlop ? (
           <div className="rounded-[28px] border border-red-400/24 bg-red-500/10 p-5 transition hover:scale-[1.02]">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-red-300/70">
-              <ThumbsDown className="h-4 w-4" /> Nỗi thất vọng lớn nhất
+              <ThumbsDown className="h-4 w-4" /> Biggest Disappointment
             </div>
             <div className="mt-3 flex items-center gap-2.5">
               <Flag teamName={stats.biggestFlop.teamName} size={26} />
               <span className="truncate text-2xl font-black text-white">{stats.biggestFlop.teamName}</span>
             </div>
-            <div className="mt-2 text-sm text-white/70">Hạng {stats.biggestFlop.rank}/48 đội</div>
-            <div className="mt-0.5 text-xs text-white/45">Top 10 mạnh nhất nhưng bị loại từ vòng bảng</div>
+            <div className="mt-2 text-sm text-white/70">Rank {stats.biggestFlop.rank}/48 teams</div>
+            <div className="mt-0.5 text-xs text-white/45">Top 12 strongest but eliminated in group stage</div>
           </div>
         ) : null}
 
         {stats.highestScoringMatch ? (
           <div className="sm:col-span-2">
             <StatCard
-              label="Trận nhiều bàn nhất"
+              label="Highest Scoring Match"
               value={`${stats.highestScoringMatch.homeTeamName} ${stats.highestScoringMatch.homeScore} - ${stats.highestScoringMatch.awayScore} ${stats.highestScoringMatch.awayTeamName}`}
-              sub={`${stats.highestScoringMatch.totalGoals} bàn · ${stats.highestScoringMatch.roundLabel}`}
+              sub={`${stats.highestScoringMatch.totalGoals} goals · ${stats.highestScoringMatch.roundLabel}`}
               accent="mexico"
               flagTeams={[stats.highestScoringMatch.homeTeamName, stats.highestScoringMatch.awayTeamName]}
               className="h-full"
@@ -546,12 +546,12 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
       <div className="mt-6 space-y-4">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-host-mexico" />
-          <h3 className="text-lg font-bold text-white">Trận đấu nổi bật</h3>
+          <h3 className="text-lg font-bold text-white">Featured Matches</h3>
         </div>
 
         {stats.finalMatch ? (
           <FeaturedMatchCard
-            title="Chung kết"
+            title="Final"
             homeTeam={stats.finalMatch.homeTeamName}
             awayTeam={stats.finalMatch.awayTeamName}
             homeScore={stats.finalMatch.homeScore}
@@ -569,7 +569,7 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
           <div className={`grid gap-4 ${smallCardCount >= 3 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-2'}`}>
             {stats.thirdPlaceMatch ? (
               <FeaturedMatchCard
-                title="Tranh hạng ba"
+                title="Third Place Match"
                 homeTeam={stats.thirdPlaceMatch.homeTeamName}
                 awayTeam={stats.thirdPlaceMatch.awayTeamName}
                 homeScore={stats.thirdPlaceMatch.homeScore}
@@ -584,7 +584,7 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
 
             {stats.highestScoringMatch ? (
               <FeaturedMatchCard
-                title="Trận nhiều bàn nhất"
+                title="Highest Scoring Match"
                 homeTeam={stats.highestScoringMatch.homeTeamName}
                 awayTeam={stats.highestScoringMatch.awayTeamName}
                 homeScore={stats.highestScoringMatch.homeScore}
@@ -599,7 +599,7 @@ export const TournamentRecap = ({ stats, groupMatches, knockoutMatches }: Tourna
 
             {dramaticMatch ? (
               <FeaturedMatchCard
-                title="Trận kịch tính nhất"
+                title="Most Dramatic Match"
                 homeTeam={dramaticMatch.homeTeamName}
                 awayTeam={dramaticMatch.awayTeamName}
                 homeScore={dramaticMatch.homeScore}

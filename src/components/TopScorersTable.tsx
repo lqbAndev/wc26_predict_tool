@@ -13,10 +13,10 @@ export const TopScorersTable = ({ scorers }: TopScorersTableProps) => {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="field-label">Top Scorers</p>
-          <h2 className="mt-2 text-2xl font-bold text-white">Bảng vua phá lưới</h2>
+          <h2 className="mt-2 text-2xl font-bold text-white">Top Scorers Leaderboard</h2>
         </div>
         <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70">
-          Penalty shoot-out không tính
+          Penalty shoot-outs not counted
         </div>
       </div>
 
@@ -26,9 +26,9 @@ export const TopScorersTable = ({ scorers }: TopScorersTableProps) => {
             <thead className="text-xs uppercase tracking-[0.22em] text-white/45">
               <tr>
                 <th className="px-4 py-3 text-left">#</th>
-                <th className="px-4 py-3 text-left">Cầu thủ</th>
-                <th className="px-4 py-3 text-left">Đội tuyển</th>
-                <th className="px-4 py-3 text-center">Bàn thắng</th>
+                <th className="px-4 py-3 text-left">Player</th>
+                <th className="px-4 py-3 text-left">Team</th>
+                <th className="px-4 py-3 text-center">Goals</th>
               </tr>
             </thead>
             <tbody>
@@ -54,8 +54,7 @@ export const TopScorersTable = ({ scorers }: TopScorersTableProps) => {
         </div>
       ) : (
         <div className="mt-5 rounded-[28px] border border-dashed border-white/10 bg-black/10 p-6 text-sm leading-6 text-white/65">
-          Chưa có bàn thắng nào được ghi nhận. Hãy bắt đầu dự đoán vòng bảng để hệ thống tạo danh
-          sách cầu thủ ghi bàn.
+          No goals recorded yet. Start predicting group stage matches for the system to generate the scorers list.
         </div>
       )}
     </section>

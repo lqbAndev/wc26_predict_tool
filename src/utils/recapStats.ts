@@ -167,7 +167,7 @@ export const calculateTournamentStats = (
     const goals = (match.homeScore ?? 0) + (match.awayScore ?? 0);
     if (goals > highestGoals) {
       highestGoals = goals;
-      highestScoringMatch = buildMatchHighlight(match, `Bảng ${match.group}`);
+      highestScoringMatch = buildMatchHighlight(match, `Group ${match.group}`);
     }
   }
 
@@ -197,8 +197,8 @@ export const calculateTournamentStats = (
     }
   }
 
-  const finalMatchHighlight = finalMatch ? buildMatchHighlight(finalMatch, 'Chung kết') : null;
-  const thirdPlaceMatchHighlight = thirdPlaceMatch ? buildMatchHighlight(thirdPlaceMatch, 'Tranh hạng 3') : null;
+  const finalMatchHighlight = finalMatch ? buildMatchHighlight(finalMatch, 'Final') : null;
+  const thirdPlaceMatchHighlight = thirdPlaceMatch ? buildMatchHighlight(thirdPlaceMatch, 'Third Place Match') : null;
 
   let mostDramaticMatch: MatchHighlight | null = null;
   let highestDramaScore = -1;
@@ -226,7 +226,7 @@ export const calculateTournamentStats = (
     const dramaScore = computeDramaScore(match);
     if (dramaScore > highestDramaScore) {
       highestDramaScore = dramaScore;
-      mostDramaticMatch = buildMatchHighlight(match, `Bảng ${match.group}`);
+      mostDramaticMatch = buildMatchHighlight(match, `Group ${match.group}`);
     }
   }
 
@@ -382,7 +382,7 @@ export const calculateTournamentStats = (
       cinderella = {
         teamName: team.name,
         rank: rank,
-        journey: `Tới ${roundLabel}`,
+        journey: `Reached ${roundLabel}`,
       };
     }
   }

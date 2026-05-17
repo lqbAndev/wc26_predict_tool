@@ -98,19 +98,19 @@ const getJourney = (teamId: string, knockoutMatches: Record<KnockoutRound, Knock
   const thirdPlaceMatch = knockoutMatches.thirdPlace[0];
 
   if (finalMatch?.winnerTeamId === teamId) {
-    return { label: 'Vô địch', rank: 8 };
+    return { label: 'Champion', rank: 8 };
   }
 
   if (finalMatch?.loserTeamId === teamId) {
-    return { label: 'Á quân', rank: 7 };
+    return { label: 'Runner-up', rank: 7 };
   }
 
   if (thirdPlaceMatch?.winnerTeamId === teamId) {
-    return { label: 'Hạng ba', rank: 6 };
+    return { label: 'Third Place', rank: 6 };
   }
 
   if (thirdPlaceMatch?.loserTeamId === teamId) {
-    return { label: 'Hạng tư', rank: 5 };
+    return { label: 'Fourth Place', rank: 5 };
   }
 
   let highestRound: KnockoutRound | null = null;
@@ -130,7 +130,7 @@ const getJourney = (teamId: string, knockoutMatches: Record<KnockoutRound, Knock
   }
 
   if (!highestRound) {
-    return { label: 'Dừng ở vòng bảng', rank: 1 };
+    return { label: 'Eliminated in Group Stage', rank: 1 };
   }
 
   const roundRankMap: Record<Exclude<KnockoutRound, 'thirdPlace' | 'final'>, number> = {
@@ -141,7 +141,7 @@ const getJourney = (teamId: string, knockoutMatches: Record<KnockoutRound, Knock
   };
 
   return {
-    label: `Tới ${ROUND_LABELS[highestRound]}`,
+    label: `Reached ${ROUND_LABELS[highestRound]}`,
     rank: roundRankMap[highestRound],
   };
 };
@@ -171,8 +171,8 @@ export const buildTeamCompareStatsMap = (
       goalsConceded: 0,
       wins: 0,
       motmCount: 0,
-      bestPlayer: 'Chưa xác định',
-      journey: 'Dừng ở vòng bảng',
+      bestPlayer: 'Not Determined',
+      journey: 'Eliminated in Group Stage',
       journeyRank: 1,
       penaltyMatches: 0,
       totalMatches: 0,
@@ -182,7 +182,7 @@ export const buildTeamCompareStatsMap = (
       winRate: '0%',
       recentForm: '--',
       biggestWin: '--',
-      keyPlayer: 'Chưa xác định',
+      keyPlayer: 'Not Determined',
     });
     matchResultsByTeam.set(team.id, []);
   }

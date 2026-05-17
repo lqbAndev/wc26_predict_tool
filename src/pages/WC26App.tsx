@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, ChevronDown, GitCompareArrows, Orbit, RotateCcw, Swords, Trophy, Users, Zap } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronDown, Orbit, RotateCcw, Swords, Trophy, Users, Zap } from 'lucide-react';
 import { BackToTopButton } from '../components/BackToTopButton';
 import { BestThirdTable } from '../components/BestThirdTable';
 import { ChampionCup, TriondaBall, WorldCupLogo } from '../components/BrandAssets';
 import { ChampionModal } from '../components/ChampionModal';
 import { Flag } from '../components/Flag';
 import { GroupCard } from '../components/GroupCard';
-import { HeadToHeadModal } from '../components/HeadToHeadModal';
+
 import { HeroBranding } from '../components/HeroBranding';
 import { KnockoutBracket } from '../components/KnockoutBracket';
 import { ResetModal } from '../components/ResetModal';
@@ -17,7 +17,7 @@ import { TournamentRecap } from '../components/TournamentRecap';
 import { GROUPS, TEAMS, TEAMS_BY_ID } from '../data/tournament';
 import { CompetitionProvider } from '../hooks/CompetitionContext';
 import { useTournament } from '../hooks/useTournament';
-import { buildTeamCompareStatsMap } from '../utils/headToHead';
+
 import { calculateTournamentStats } from '../utils/recapStats';
 
 const SLOGAN = 'WE ARE 26';
@@ -41,10 +41,6 @@ export default function WC26App() {
 
   const [showResetModal, setShowResetModal] = useState(false);
   const [showChampionModal, setShowChampionModal] = useState(false);
-  const [showHeadToHeadModal, setShowHeadToHeadModal] = useState(false);
-  const [compareTeamAId, setCompareTeamAId] = useState('');
-  const [compareTeamBId, setCompareTeamBId] = useState('');
-  const [compareRequested, setCompareRequested] = useState(false);
   const [scenarioOpen, setScenarioOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const prevChampionRef = useRef<string | null>(null);
@@ -113,25 +109,7 @@ export default function WC26App() {
     [coreState.groupMatches, coreState.knockoutMatches, derivedState.topScorers],
   );
 
-  const compareStatsMap = useMemo(
-    () => buildTeamCompareStatsMap(TEAMS, coreState.groupMatches, coreState.knockoutMatches),
-    [coreState.groupMatches, coreState.knockoutMatches],
-  );
 
-  const compareResult = useMemo(() => {
-    if (!compareRequested || !compareTeamAId || !compareTeamBId || compareTeamAId === compareTeamBId) {
-      return null;
-    }
-
-    const left = compareStatsMap.get(compareTeamAId);
-    const right = compareStatsMap.get(compareTeamBId);
-
-    if (!left || !right) {
-      return null;
-    }
-
-    return { left, right };
-  }, [compareRequested, compareStatsMap, compareTeamAId, compareTeamBId]);
 
   const handleOpenKnockout = () => {
     openKnockoutStage();
@@ -148,10 +126,7 @@ export default function WC26App() {
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
 
-  const handleOpenHeadToHead = () => {
-    setCompareRequested(false);
-    setShowHeadToHeadModal(true);
-  };
+
 
   return (
     <CompetitionProvider value={{ teamsById: TEAMS_BY_ID }}>
@@ -229,14 +204,7 @@ export default function WC26App() {
                       </button>
                     ) : null}
 
-                    <button
-                      type="button"
-                      onClick={handleOpenHeadToHead}
-                      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-host-ice/15 bg-white/[0.05] px-3.5 py-2.5 text-xs font-semibold text-host-ice transition hover:-translate-y-0.5 hover:bg-white/[0.1] sm:text-sm"
-                    >
-                      <GitCompareArrows className="h-4 w-4" />
-                      Head-to-Head
-                    </button>
+
 
                     <button
                       type="button"
@@ -474,24 +442,7 @@ export default function WC26App() {
         onClose={() => setSelectedTeamId(null)}
       />
 
-      <HeadToHeadModal
-        isOpen={showHeadToHeadModal}
-        teams={TEAMS}
-        teamAId={compareTeamAId}
-        teamBId={compareTeamBId}
-        compareRequested={compareRequested}
-        compareStats={compareResult}
-        onChangeTeamA={(teamId) => {
-          setCompareTeamAId(teamId);
-          setCompareRequested(false);
-        }}
-        onChangeTeamB={(teamId) => {
-          setCompareTeamBId(teamId);
-          setCompareRequested(false);
-        }}
-        onCompare={() => setCompareRequested(true)}
-        onClose={() => setShowHeadToHeadModal(false)}
-      />
+
 
       <BackToTopButton />
     </div>

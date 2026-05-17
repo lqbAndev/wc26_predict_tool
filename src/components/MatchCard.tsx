@@ -25,7 +25,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
     <article className="rounded-[28px] border border-white/10 bg-black/15 p-4 shadow-glow">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="field-label">Lượt {match.matchday}</p>
+          <p className="field-label">Round {match.matchday}</p>
           <div className="mt-1 space-y-2">
             <div className="flex items-center gap-3 text-base font-semibold text-white">
               <Flag teamName={homeTeam.name} size={28} />
@@ -46,11 +46,11 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
                 : 'border border-amber-300/20 bg-amber-300/10 text-amber-100'
             }`}
           >
-            {isCompleted ? 'Đã chốt' : 'Chờ dự đoán'}
+            {isCompleted ? 'Completed' : 'Pending'}
           </span>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-center">
-            <div className="text-xs uppercase tracking-[0.28em] text-white/45">Tỉ số</div>
+            <div className="text-xs uppercase tracking-[0.28em] text-white/45">Score</div>
             <div className="mt-1 text-2xl font-bold text-white">
               {match.homeScore ?? '-'} <span className="text-white/35">:</span> {match.awayScore ?? '-'}
             </div>
@@ -77,7 +77,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
           >
             <span className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-emerald-300/60" />
-              <span className="text-xs uppercase tracking-[0.18em]">Diễn biến trận đấu</span>
+              <span className="text-xs uppercase tracking-[0.18em]">Match Timeline</span>
             </span>
             <ChevronDown
               className={`h-4 w-4 text-white/40 transition-transform duration-200 ${
@@ -112,7 +112,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-white/40">Không có bàn thắng</p>
+                    <p className="text-sm text-white/40">No goals</p>
                   )}
                 </div>
               </div>
@@ -137,7 +137,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-white/40">Không có bàn thắng</p>
+                    <p className="text-sm text-white/40">No goals</p>
                   )}
                 </div>
               </div>
@@ -152,7 +152,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
             <p className="mt-2 text-sm leading-6 text-white/80">
               {match.scorers?.home.length
                 ? match.scorers.home.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
-                : 'Không có bàn thắng.'}
+                : 'No goals.'}
             </p>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
@@ -160,7 +160,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
             <p className="mt-2 text-sm leading-6 text-white/80">
               {match.scorers?.away.length
                 ? match.scorers.away.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
-                : 'Không có bàn thắng.'}
+                : 'No goals.'}
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export const MatchCard = ({ match, onPredict }: MatchCardProps) => {
             : 'border border-emerald-300/20 bg-emerald-400/15 text-emerald-50 hover:-translate-y-0.5 hover:bg-emerald-400/20'
         }`}
       >
-        {isCompleted ? 'Kết quả đã khóa' : 'Dự đoán'}
+        {isCompleted ? '' : 'Predict'}
       </button>
     </article>
   );

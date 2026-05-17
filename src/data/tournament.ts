@@ -166,7 +166,7 @@ export const TEAMS_BY_ID = TEAMS.reduce<Record<string, Team>>((accumulator, team
 
 export const GROUPS = GROUP_IDS.map((groupId) => ({
   id: groupId,
-  label: `Bảng ${groupId}`,
+  label: `Group ${groupId}`,
   teams: TEAMS.filter((team) => team.group === groupId),
 }));
 

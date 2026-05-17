@@ -12,15 +12,15 @@ export const StandingsTable = ({ standings, qualifiedThirdIds }: StandingsTableP
       <table className="min-w-full text-sm">
         <thead className="text-xs uppercase tracking-[0.22em] text-white/45">
           <tr>
-            <th className="px-4 py-3 text-left">Đội</th>
-            <th className="px-2 py-3 text-center">Tr</th>
-            <th className="px-2 py-3 text-center">T</th>
-            <th className="px-2 py-3 text-center">H</th>
-            <th className="px-2 py-3 text-center">B</th>
-            <th className="px-2 py-3 text-center">BT</th>
-            <th className="px-2 py-3 text-center">BB</th>
-            <th className="px-2 py-3 text-center">HS</th>
-            <th className="px-4 py-3 text-center">Điểm</th>
+            <th className="px-4 py-3 text-left">Team</th>
+            <th className="px-2 py-3 text-center">P</th>
+            <th className="px-2 py-3 text-center">W</th>
+            <th className="px-2 py-3 text-center">D</th>
+            <th className="px-2 py-3 text-center">L</th>
+            <th className="px-2 py-3 text-center">GF</th>
+            <th className="px-2 py-3 text-center">GA</th>
+            <th className="px-2 py-3 text-center">GD</th>
+            <th className="px-4 py-3 text-center">Pts</th>
           </tr>
         </thead>
         <tbody>
@@ -30,10 +30,10 @@ export const StandingsTable = ({ standings, qualifiedThirdIds }: StandingsTableP
             const isGroupComplete = standings.every((entry) => entry.played === 3);
             const isEliminated = isGroupComplete && !isDirectQualified && !isBestThird;
 
-            let statusText = 'Đang cạnh tranh';
-            if (isDirectQualified) statusText = 'Đi tiếp trực tiếp';
-            else if (isBestThird) statusText = 'Top 8 hạng ba';
-            else if (isEliminated) statusText = 'Bị loại';
+            let statusText = 'Competing';
+            if (isDirectQualified) statusText = 'Qualified';
+            else if (isBestThird) statusText = 'Best 3rd (Top 8)';
+            else if (isEliminated) statusText = 'Eliminated';
 
             return (
               <tr

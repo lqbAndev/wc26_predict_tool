@@ -41,7 +41,7 @@ export const PenaltyDetailsModal = ({ match, isOpen, onClose }: PenaltyDetailsMo
   const KickIcon = ({ scored }: { scored: boolean }) => (
     <div
       className={`transition-transform hover:scale-110 ${scored ? '' : 'opacity-25'}`}
-      title={scored ? 'Ghi bàn' : 'Sút hỏng'}
+      title={scored ? 'Scored' : 'Missed'}
     >
       <TriondaBall size={24} />
     </div>
@@ -68,7 +68,7 @@ export const PenaltyDetailsModal = ({ match, isOpen, onClose }: PenaltyDetailsMo
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Chi tiết Luân lưu Penalty"
+        aria-label="Penalty Shootout Details"
         className={[
           'fixed z-[9999] flex flex-col',
           /* Mobile: bottom-sheet */
@@ -108,7 +108,7 @@ export const PenaltyDetailsModal = ({ match, isOpen, onClose }: PenaltyDetailsMo
             type="button"
             onClick={onClose}
             className="shrink-0 rounded-full border border-white/10 bg-white/5 p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
-            aria-label="Đóng"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
@@ -122,11 +122,11 @@ export const PenaltyDetailsModal = ({ match, isOpen, onClose }: PenaltyDetailsMo
             <div>
               <div className="mb-3 flex items-center justify-center gap-3">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                  Chuỗi sút
+                  Kick Sequence
                 </p>
                 {firstKickerTeamName && (
                   <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300/80">
-                    {firstKickerTeamName} sút trước
+                    {firstKickerTeamName} kicks first
                   </span>
                 )}
               </div>
@@ -202,14 +202,14 @@ export const PenaltyDetailsModal = ({ match, isOpen, onClose }: PenaltyDetailsMo
           {/* No data fallback */}
           {timeline.length === 0 && (
             <p className="py-4 text-center text-sm text-white/35">
-              Không có dữ liệu chi tiết cho trận này.
+              No detailed data for this match.
             </p>
           )}
 
           {/* Sudden death note */}
           {(
             <p className="text-center text-[13px] text-amber-300/55">
-              ⚡ {timeline.length} lượt sút tổng cộng
+              ⚡ {timeline.length} total kicks
             </p>
           )}
         </div>

@@ -254,11 +254,11 @@ export const buildKnockoutBracket = (
       if (pos === 1) {
         const team = winnerByGroup.get(homeRef.group);
         homeTeamId = team?.teamId ?? null;
-        homeSeedLabel = `Nhất ${homeRef.group}`;
+        homeSeedLabel = `1st ${homeRef.group}`;
       } else {
         const team = runnerByGroup.get(homeRef.group);
         homeTeamId = team?.teamId ?? null;
-        homeSeedLabel = `Nhì ${homeRef.group}`;
+        homeSeedLabel = `2nd ${homeRef.group}`;
       }
     }
 
@@ -272,11 +272,11 @@ export const buildKnockoutBracket = (
       if (pos === 1) {
         const team = winnerByGroup.get(awayRef.group);
         awayTeamId = team?.teamId ?? null;
-        awaySeedLabel = `Nhất ${awayRef.group}`;
+        awaySeedLabel = `1st ${awayRef.group}`;
       } else {
         const team = runnerByGroup.get(awayRef.group);
         awayTeamId = team?.teamId ?? null;
-        awaySeedLabel = `Nhì ${awayRef.group}`;
+        awaySeedLabel = `2nd ${awayRef.group}`;
       }
     } else if ('possibleGroups' in awayRef) {
       // Third-place slot – look up from assignment
@@ -284,7 +284,7 @@ export const buildKnockoutBracket = (
       if (assignedGroup) {
         const team = findThirdByGroup(assignedGroup, seeds.bestThirds);
         awayTeamId = team?.teamId ?? null;
-        awaySeedLabel = `Hạng 3 · ${assignedGroup}`;
+        awaySeedLabel = `3rd · ${assignedGroup}`;
       }
     }
 

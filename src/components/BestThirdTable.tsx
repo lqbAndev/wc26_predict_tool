@@ -7,9 +7,9 @@ interface BestThirdTableProps {
 }
 
 const STATUS_LABELS: Record<ThirdPlaceStanding['status'], string> = {
-  qualified: 'Đi tiếp',
-  provisional: 'Tạm thời',
-  eliminated: 'Bị loại',
+  qualified: 'Qualified',
+  provisional: 'Provisional',
+  eliminated: 'Eliminated',
 };
 
 export const BestThirdTable = ({ entries, groupStageComplete }: BestThirdTableProps) => {
@@ -18,16 +18,15 @@ export const BestThirdTable = ({ entries, groupStageComplete }: BestThirdTablePr
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="field-label">Best 3rd Place</p>
-          <h2 className="mt-2 text-2xl font-bold text-white">Bảng 12 đội hạng ba</h2>
+          <h2 className="mt-2 text-2xl font-bold text-white">12 Third-Place Teams</h2>
         </div>
         <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70">
-          {groupStageComplete ? 'Đã chốt Top 8' : 'Đang tạm tính'}
+          {groupStageComplete ? 'Top 8 confirmed' : 'Temporarily calculating'}
         </div>
       </div>
 
       <p className="mt-4 text-sm leading-6 text-white/70">
-        Top 8 đội hạng ba được tô nổi để bước vào knock-out. Khi vòng bảng chưa xong, đây là bảng
-        xếp hạng tạm thời theo dữ liệu hiện tại.
+        Top 8 third-place teams are highlighted to advance to knockout. When group stage is incomplete, this is a provisional ranking based on current data.
       </p>
 
       <div className="mt-5 overflow-x-auto rounded-[28px] border border-white/10 bg-black/15">
@@ -35,13 +34,13 @@ export const BestThirdTable = ({ entries, groupStageComplete }: BestThirdTablePr
           <thead className="text-xs uppercase tracking-[0.22em] text-white/45">
             <tr>
               <th className="px-4 py-3 text-left">#</th>
-              <th className="px-4 py-3 text-left">Đội</th>
-              <th className="px-3 py-3 text-center">Bảng</th>
-              <th className="px-3 py-3 text-center">Điểm</th>
-              <th className="px-3 py-3 text-center">HS</th>
-              <th className="px-3 py-3 text-center">BT</th>
-              <th className="px-3 py-3 text-center">BB</th>
-              <th className="px-4 py-3 text-center">Trạng thái</th>
+              <th className="px-4 py-3 text-left">Team</th>
+              <th className="px-3 py-3 text-center">Group</th>
+              <th className="px-3 py-3 text-center">Pts</th>
+              <th className="px-3 py-3 text-center">GD</th>
+              <th className="px-3 py-3 text-center">GF</th>
+              <th className="px-3 py-3 text-center">GA</th>
+              <th className="px-4 py-3 text-center">Status</th>
             </tr>
           </thead>
           <tbody>

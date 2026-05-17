@@ -47,7 +47,7 @@ export const GroupCard = ({
           </div>
         </div>
         <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70">
-          {completedMatches}/{matches.length} trận đã chốt
+          {completedMatches}/{matches.length} Match completed
         </div>
       </div>
 

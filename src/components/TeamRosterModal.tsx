@@ -13,10 +13,10 @@ interface TeamRosterModalProps {
 const POSITION_ORDER: PlayerPosition[] = ['FW', 'MF', 'DF', 'GK'];
 
 const POSITION_CONFIG: Record<PlayerPosition, { label: string; color: string; bgColor: string; borderColor: string }> = {
-  FW: { label: 'Tiền đạo', color: 'text-rose-300', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-400/20' },
-  MF: { label: 'Tiền vệ', color: 'text-amber-300', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-400/20' },
-  DF: { label: 'Hậu vệ', color: 'text-sky-300', bgColor: 'bg-sky-500/10', borderColor: 'border-sky-400/20' },
-  GK: { label: 'Thủ môn', color: 'text-emerald-300', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-400/20' },
+  FW: { label: 'Forward', color: 'text-rose-300', bgColor: 'bg-rose-500/10', borderColor: 'border-rose-400/20' },
+  MF: { label: 'Midfielder', color: 'text-amber-300', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-400/20' },
+  DF: { label: 'Defender', color: 'text-sky-300', bgColor: 'bg-sky-500/10', borderColor: 'border-sky-400/20' },
+  GK: { label: 'Goalkeeper', color: 'text-emerald-300', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-400/20' },
 };
 
 const groupByPosition = (players: PlayerProfile[]): Record<PlayerPosition, PlayerProfile[]> => {
@@ -83,7 +83,7 @@ export const TeamRosterModal = ({ isOpen, team, onClose }: TeamRosterModalProps)
                 <h3 className="text-lg font-bold text-white sm:text-xl">{team.name}</h3>
               </div>
               <p className="mt-0.5 text-xs text-white/45">
-                Bảng {team.group} · {team.players.length} cầu thủ
+                Group {team.group} · {team.players.length} players
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export const TeamRosterModal = ({ isOpen, team, onClose }: TeamRosterModalProps)
             onClick={onClose}
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
           >
-            Đóng
+            Close
           </button>
         </div>
       </div>

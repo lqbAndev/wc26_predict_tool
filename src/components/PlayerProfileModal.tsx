@@ -21,7 +21,7 @@ interface PlayerProfileModalProps {
 }
 
 interface TimelineEntry {
-  /** e.g. "Ghi 2 bàn — Tứ kết vs Brazil" */
+  /** e.g. "Scored 2 goals — Quarter Finals vs Brazil" */
   description: string;
   /** Sort key for chronological order */
   sortOrder: number;
@@ -88,7 +88,7 @@ const buildPlayerTimeline = (
       if (isCleanSheet) totalGoalsOrCleanSheets += 1;
 
       const parts: string[] = [];
-      if (isCleanSheet) parts.push('Sạch lưới');
+      if (isCleanSheet) parts.push('Clean sheet');
       if (isMotm) parts.push('MOTM');
 
       const type: TimelineEntry['type'] =
@@ -133,7 +133,7 @@ const buildPlayerTimeline = (
       // --- Create description ---
       const parts: string[] = [];
       if (goalsInMatch > 0) {
-        parts.push(`Ghi ${goalsInMatch} bàn`);
+        parts.push(`Scored ${goalsInMatch} goal${goalsInMatch > 1 ? 's' : ''}`);
       }
       if (isMotm) {
         parts.push('MOTM');
@@ -156,7 +156,7 @@ const buildPlayerTimeline = (
   let sortCounter = 0;
   for (const match of groupMatches) {
     if (match.homeTeamId !== teamId && match.awayTeamId !== teamId) continue;
-    processMatch(match, `Vòng bảng ${match.group}`, sortCounter++);
+    processMatch(match, `Group Stage ${match.group}`, sortCounter++);
   }
 
   // Knockout matches (in progression order)
@@ -184,7 +184,7 @@ const TypeBadge = ({ type }: { type: TimelineEntry['type'] }) => {
   const config = {
     goal: {
       bg: 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300',
-      label: 'Ghi bàn',
+      label: 'Goal',
     },
     motm: {
       bg: 'bg-amber-500/20 border-amber-400/30 text-amber-300',
@@ -194,17 +194,17 @@ const TypeBadge = ({ type }: { type: TimelineEntry['type'] }) => {
     both: {
       bg: 'bg-host-mexico/20 border-host-mexico/30 text-host-ice',
       icon: <Trophy className="h-3 w-3" />,
-      label: 'Ghi bàn & MOTM',
+      label: 'Goal & MOTM',
     },
     cleansheet: {
       bg: 'bg-sky-500/20 border-sky-400/30 text-sky-300',
       icon: <Shield className="h-3 w-3" />,
-      label: 'Sạch lưới',
+      label: 'Clean Sheet',
     },
     'cleansheet+motm': {
       bg: 'bg-host-mexico/20 border-host-mexico/30 text-host-ice',
       icon: <Trophy className="h-3 w-3" />,
-      label: 'Sạch lưới + MOTM',
+      label: 'Clean Sheet + MOTM',
     },
   }[type];
 
@@ -272,7 +272,7 @@ export const PlayerProfileModal = ({
             type="button"
             onClick={onClose}
             className="inline-flex items-center justify-center rounded-full sm:rounded-xl border border-white/10 bg-white/[0.04] p-2 sm:p-2.5 text-white/70 transition hover:bg-white/[0.08] hover:text-white"
-            aria-label="Đóng hồ sơ cầu thủ"
+            aria-label="Close player profile"
           >
             <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
@@ -282,7 +282,7 @@ export const PlayerProfileModal = ({
         <div className="relative flex gap-3 px-5 sm:px-6">
           <div className={`flex-1 rounded-2xl border px-3 py-3 sm:px-4 text-center ${isGK ? 'border-sky-400/20 bg-sky-500/10' : 'border-emerald-400/20 bg-emerald-500/10'}`}>
             <div className={`text-[10px] uppercase tracking-[0.2em] ${isGK ? 'text-sky-300/70' : 'text-emerald-300/70'}`}>
-              {isGK ? 'Sạch lưới' : 'Bàn thắng'}
+              {isGK ? 'Clean Sheets' : 'Goals'}
             </div>
             <div className="mt-1 text-2xl sm:text-3xl font-black text-white">{totalGoalsOrCleanSheets}</div>
           </div>
@@ -298,7 +298,7 @@ export const PlayerProfileModal = ({
         <div className="relative mt-4 flex-1 overflow-y-auto px-5 pb-8 sm:px-6 sm:pb-6 overscroll-contain">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-host-ice/55">
             <Award className="h-4 w-4" />
-            Hành trình giải đấu
+            Tournament Journey
           </div>
 
           {timeline.length > 0 ? (
@@ -340,10 +340,10 @@ export const PlayerProfileModal = ({
                 <User className="h-7 w-7 text-white/30" />
               </div>
               <p className="mt-4 text-sm font-semibold text-white/55">
-                {isGK ? 'Chưa giữ sạch lưới trận nào' : 'Chưa ghi bàn nào trong giải'}
+                {isGK ? 'No clean sheets yet' : 'No goals scored in tournament'}
               </p>
               <p className="mt-1 max-w-[260px] text-xs text-white/35">
-                Nhưng đóng góp lớn vào lối chơi và tinh thần đội tuyển
+                But contributing greatly to team play and spirit
               </p>
             </div>
           )}

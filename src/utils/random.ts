@@ -46,14 +46,14 @@ const weightedPick = <T,>(choices: Array<{ value: T; weight: number }>) => {
  * ═══════════════════════════════════════════════════════════════
  *  SCENARIO ENGINE — Outcome-First approach
  *
- *  Tiêu chuẩn (Standard): Thuần ngẫu nhiên 100%. Cả 2 đội bốc
- *  độc lập từ mâm cơ bản. Không quan tâm chênh lệch Rating.
+ *  Standard: Pure random 100%. Both teams draw
+ *  independently from base pool. Rating difference ignored.
  *
- *  Kẻ mạnh (Favorites): Roll %: 80% đội mạnh thắng | 10% Hòa
- *  | 10% Đội yếu thắng. Sau đó sinh tỷ số khớp outcome đó.
+ *  Favorites: Roll %: 80% strong team wins | 10% Draw
+ *  | 10% Weak team wins. Then generate score matching that outcome.
  *
- *  Ngựa ô (Underdogs): Roll %: 20% đội mạnh thắng | 20% Hòa
- *  | 60% Đội yếu thắng. Tương tự, sinh tỷ số khớp outcome.
+ *  Underdogs: Roll %: 20% strong team wins | 20% Draw
+ *  | 60% Weak team wins. Similarly, generate score matching outcome.
  * ═══════════════════════════════════════════════════════════════
  */
 

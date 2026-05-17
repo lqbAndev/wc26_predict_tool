@@ -40,8 +40,8 @@ export const ChampionModal = ({ championName, isOpen, onClose, onViewRecap }: Ch
 
         <button
           onClick={onClose}
-          aria-label="Đóng"
-          title="Đóng"
+          aria-label="Close"
+          title="Close"
           className="absolute right-5 top-5 z-30 rounded-full bg-white/6 p-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
         >
           <X className="h-5 w-5" />
@@ -66,7 +66,7 @@ export const ChampionModal = ({ championName, isOpen, onClose, onViewRecap }: Ch
           </div>
 
           <p className="mx-auto mt-6 max-w-md text-sm leading-7 text-white/72">
-            Chúc mừng {championName} đã chạm tới đỉnh cao World Cup 2026 trong phiên bản dự đoán này.
+            Congratulations to {championName} for reaching the pinnacle of World Cup 2026 in this prediction.
           </p>
 
           <button
@@ -74,7 +74,7 @@ export const ChampionModal = ({ championName, isOpen, onClose, onViewRecap }: Ch
             onClick={handleViewRecap}
             className="mt-8 w-full rounded-2xl border border-host-mexico/35 bg-host-mexico/18 px-5 py-4 text-sm font-bold text-host-ice transition hover:scale-[1.02] hover:bg-host-mexico/24"
           >
-            Đóng và xem Recap giải đấu
+            Close and View Tournament Recap
           </button>
         </div>
       </div>

@@ -44,14 +44,14 @@ const formatScore = (home: number | null, away: number | null) =>
 
 const getStatusLabel = (match: KnockoutMatch, hasTeams: boolean) => {
   if (match.status === 'completed') {
-    return 'Đã chốt';
+    return 'Completed';
   }
 
   if (match.status === 'awaiting-penalties') {
-    return 'Chờ penalty';
+    return 'Awaiting Penalty';
   }
 
-  return hasTeams ? 'Chưa dự đoán' : 'Chờ cặp đấu';
+  return hasTeams ? 'Not Predicted' : 'Awaiting Teams';
 };
 
 export const KnockoutMatchCard = ({
@@ -91,12 +91,12 @@ export const KnockoutMatchCard = ({
     match.extraTimeAwayScore ?? match.regulationAwayScore ?? match.awayScore;
 
   const actionLabel = waitingPenalty
-    ? 'Đá penalty'
+    ? 'Penalty Shootout'
     : canPredict
-      ? 'Dự đoán'
+      ? 'Predict'
       : isCompleted
-        ? 'Trận đã chốt'
-        : 'Chờ đủ cặp đấu';
+        ? 'Match Completed'
+        : 'Awaiting Teams';
 
   const handleAction = () => {
     if (waitingPenalty) {
@@ -137,7 +137,7 @@ export const KnockoutMatchCard = ({
 
           {teamName && showOrigin ? (
             <span className="mt-0.5 block text-[10px] uppercase tracking-[0.12em] text-host-ice/58">
-              {originLabel ?? 'Đang xác định nguồn'}
+              {originLabel ?? 'Determining Source'}
             </span>
           ) : null}
         </div>
@@ -205,7 +205,7 @@ export const KnockoutMatchCard = ({
               tabIndex={0}
               onClick={() => setShowPenaltyModal(true)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPenaltyModal(true); }}
-              title="Xem chi tiết luân lưu"
+              title="View penalty shootout details"
               className="cursor-pointer rounded-full border border-host-mexico/24 bg-host-mexico/10 px-2.5 py-1 text-host-ice transition hover:border-host-mexico/50 hover:bg-host-mexico/20 hover:underline"
             >
               Penalty {match.penalty.home}-{match.penalty.away} ↗
@@ -214,7 +214,7 @@ export const KnockoutMatchCard = ({
 
           {isCompleted && totalGoals === 0 ? (
             <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-host-ice/62">
-              Không có bàn thắng
+              No goals
             </span>
           ) : null}
         </div>
@@ -239,7 +239,7 @@ export const KnockoutMatchCard = ({
           >
             <span className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-host-mexico/60" />
-              <span className="text-[10px] uppercase tracking-[0.18em]">Diễn biến trận đấu</span>
+              <span className="text-[10px] uppercase tracking-[0.18em]">Match Timeline</span>
             </span>
             <ChevronDown
               className={`h-4 w-4 text-white/40 transition-transform duration-200 ${timelineExpanded ? 'rotate-180' : ''
@@ -275,7 +275,7 @@ export const KnockoutMatchCard = ({
                         </div>
                       ))
                     ) : (
-                      <p className="text-[11px] text-white/35">Không ghi bàn</p>
+                      <p className="text-[11px] text-white/35">No goals</p>
                     )}
                   </div>
                 </div>
@@ -300,7 +300,7 @@ export const KnockoutMatchCard = ({
                         </div>
                       ))
                     ) : (
-                      <p className="text-[11px] text-white/35">Không ghi bàn</p>
+                      <p className="text-[11px] text-white/35">No goals</p>
                     )}
                   </div>
                 </div>
@@ -312,7 +312,7 @@ export const KnockoutMatchCard = ({
               <div className={`${hasTimeline ? 'mt-2' : ''} rounded-[14px] border border-host-canada/20 bg-host-canada/8 p-2.5`}>
                 <p className="text-[10px] uppercase tracking-[0.22em] text-host-canada/70 mb-1.5 flex items-center gap-1.5">
                   <Award className="h-3 w-3" />
-                  Luân lưu Penalty (sau 120')
+                  Penalty Shootout (after 120')
                 </p>
                 <div className="flex items-center gap-3 text-sm font-semibold">
                   <div className="flex items-center gap-2">
@@ -342,13 +342,13 @@ export const KnockoutMatchCard = ({
               {homeTeam?.name ?? match.homeSeedLabel ?? 'TBD'}:{' '}
               {match.scorers?.home.length
                 ? match.scorers.home.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
-                : 'Không có bàn thắng'}
+                : 'No goals'}
             </div>
             <div className="mt-1 break-words">
               {awayTeam?.name ?? match.awaySeedLabel ?? 'TBD'}:{' '}
               {match.scorers?.away.length
                 ? match.scorers.away.map((e) => `${e.playerName} ${e.minute}'`).join(', ')
-                : 'Không có bàn thắng'}
+                : 'No goals'}
             </div>
           </div>
         ) : null}
