@@ -3,7 +3,7 @@ import { TEAM_FLAG_MAP } from '../data/flagMap';
 
 const HOST_CHIPS = [
   {
-    label: 'United States',
+    label: 'USA',
     flagKey: 'United States',
     className: 'border-host-usa/30 bg-host-usa/15 text-host-ice',
   },
