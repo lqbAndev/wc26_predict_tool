@@ -213,7 +213,7 @@ export default function CompetitionHub() {
 
       {/* ── Footer ── */}
       <footer className="hub-footer">
-        <p>Football Prediction Tool v2.2 — Multi-tournament simulation platform</p>
+        <p>Football Prediction Tool v2.3 — Multi-tournament simulation platform</p>
       </footer>
     </div>
   );
