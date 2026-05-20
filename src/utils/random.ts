@@ -360,7 +360,7 @@ const generateScorersForTeam = (team: Team, minutes: number[]) => {
 
 /* ═══════════════════ TIMELINE BUILDERS ═══════════════════ */
 
-const buildRegulationTimeline = (
+export const buildRegulationTimeline = (
   homeTeam: Team,
   awayTeam: Team,
   homeGoals: number,

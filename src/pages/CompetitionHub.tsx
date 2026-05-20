@@ -115,6 +115,20 @@ export default function CompetitionHub() {
               onClick={() => navigate('/competition/wc26')}
             />
 
+            {/* Test Cup (dev-only) */}
+            {import.meta.env.DEV && (
+              <CompetitionCard
+                title="Vibe Test Cup"
+                subtitle="8 Teams • 2 Groups • Dev Mode"
+                icon={
+                  <div style={{ fontSize: 32, lineHeight: 1 }}>🧪</div>
+                }
+                gradient="linear-gradient(135deg, rgba(168,85,247,0.3), rgba(139,92,246,0.2))"
+                borderColor="rgba(168,85,247,0.25)"
+                onClick={() => navigate('/competition/test-cup')}
+              />
+            )}
+
             <CompetitionCard
               title="UEFA Champions League"
               subtitle="Europe's Premier Club Competition"
@@ -179,13 +193,27 @@ export default function CompetitionHub() {
               borderColor="rgba(250,204,21,0.25)"
               locked
             />
+
+            {/* Test League (dev-only) */}
+            {import.meta.env.DEV && (
+              <CompetitionCard
+                title="Vibe Test League"
+                subtitle="8 Teams • Round-Robin • Dev Mode"
+                icon={
+                  <div style={{ fontSize: 32, lineHeight: 1 }}>🧪</div>
+                }
+                gradient="linear-gradient(135deg, rgba(168,85,247,0.3), rgba(59,130,246,0.2))"
+                borderColor="rgba(168,85,247,0.25)"
+                onClick={() => navigate('/competition/test-league')}
+              />
+            )}
           </div>
         </section>
       </main>
 
       {/* ── Footer ── */}
       <footer className="hub-footer">
-        <p>Football Prediction Tool v2.1 — Multi-tournament simulation platform</p>
+        <p>Football Prediction Tool v2.2 — Multi-tournament simulation platform</p>
       </footer>
     </div>
   );
